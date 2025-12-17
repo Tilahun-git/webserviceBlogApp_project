@@ -1,0 +1,44 @@
+# Build output
+/target/
+/build/
+/out/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Eclipse / STS
+.project
+.classpath
+.settings/
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment / Secrets
+.env
+application.properties
+application.yml
+application-*.properties
+application-*.yml
+
+# Gradle
+.gradle/
+
+# Coverage
+/coverage/
+/jacoco/
+
+# Temp files
+*.tmp
+*.bak
+*.swp
+*~
