@@ -1,6 +1,6 @@
 package com.blogApplication.blogApp.services.servicesContract;
 
-import com.blogApplication.blogApp.dto.UserDto;
+import com.blogApplication.blogApp.dto.userDto.UserDto;
 
 import java.util.List;
 
@@ -11,6 +11,6 @@ public interface UserServiceContract {
     List<UserDto> getAllUsers();
     UserDto createUser(UserDto user);
     UserDto updateUser(UserDto user, long id);
-    void deleteUser(long id);
+    UserDto deleteUser(long id);
 
 }
