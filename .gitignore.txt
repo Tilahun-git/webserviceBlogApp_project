@@ -1,5 +1,5 @@
 # Build output
-/target/
+/blogAppBackend/target/
 /build/
 /out/
 
@@ -35,7 +35,7 @@ application-*.yml
 
 # Coverage
 /coverage/
-/jacoco/
+ /jacoco/
 
 # Temp files
 *.tmp
