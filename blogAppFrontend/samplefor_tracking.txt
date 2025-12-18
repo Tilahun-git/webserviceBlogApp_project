@@ -1,1 +1,0 @@
-here is our spring boot application of blog application frontend
