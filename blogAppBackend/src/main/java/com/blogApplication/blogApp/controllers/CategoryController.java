@@ -17,19 +17,27 @@ public class CategoryController {
         this.categoryServiceImpl = categoryServiceImpl;
     }
 
+
+    // GET TO RETRIEVE ALL CATEGORIES
     @GetMapping("/categories-list")
     public List<CategoryDto> getAllCategories() {
         return categoryServiceImpl.getAllCategories();
     }
+
+    // POST METHOD TO ADD NEW CATEGORY
     @PostMapping("/addCategory")
     public ResponseEntity<CategoryDto> addCategory(@RequestBody CategoryDto categoryDto) {
         return new ResponseEntity <> (categoryServiceImpl.createCategory(categoryDto), HttpStatus.CREATED);
     }
+
+    // GET METHOD TO RETRIEVE SINGLE CATEGORY
     @GetMapping("category/{id}")
     public ResponseEntity<CategoryDto> getCategory(@PathVariable long id) {
         CategoryDto categoryDtoFound = categoryServiceImpl.getCategoryById(id);
         return new ResponseEntity <> (categoryDtoFound, HttpStatus.OK);
     }
+
+    // DELETE METHOD TO DELETE CATEGORY
 
     @DeleteMapping("category/{id}")
     public ResponseEntity<?> deleteCategory(@PathVariable long id) {
