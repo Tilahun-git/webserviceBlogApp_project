@@ -37,7 +37,7 @@ application-*.yml
 /coverage/
  /jacoco/
 
-# Temp files
+# Temp files here
 *.tmp
 *.bak
 *.swp
