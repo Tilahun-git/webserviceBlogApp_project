@@ -1,6 +1,6 @@
 package com.blogApplication.blogApp.services.servicesImpl;
 
-import com.blogApplication.blogApp.dto.UserDto;
+import com.blogApplication.blogApp.dto.userDto.UserDto;
 import com.blogApplication.blogApp.entities.User;
 import com.blogApplication.blogApp.exceptions.ResourceNotFoundException;
 import com.blogApplication.blogApp.repositories.UserRepo;
@@ -21,7 +21,7 @@ public class UserServiceImpl implements UserServiceContract {
     @Override
     public UserDto getUser(long id) {
 
-        User user = userRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        User user = userRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("User","id",id));
         UserDto userDtoFound = userToUserDto(user);
         return userDtoFound;
     }
@@ -30,9 +30,9 @@ public class UserServiceImpl implements UserServiceContract {
     public List<UserDto> getAllUsers() {
         List<User> users = userRepo.findAll();
         if(users.isEmpty()){
-            throw new ResourceNotFoundException("No users found");
+            throw new ResourceNotFoundException("User",": there is no any user",null);
         }
-        //mapping entity to dto
+        // This line maps entity to dto
         return users.stream().map(this::userToUserDto).collect(Collectors.toList());
 
     }
@@ -47,7 +47,7 @@ public class UserServiceImpl implements UserServiceContract {
 
     @Override
     public UserDto updateUser(UserDto userDto, long id) {
-        User existingUser = userRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        User existingUser = userRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("User","id",id));
 
         existingUser.setFirstName(userDto.getFirstName());
         existingUser.setLastName(userDto.getLastName());
@@ -61,16 +61,21 @@ public class UserServiceImpl implements UserServiceContract {
     }
 
     @Override
-    public void deleteUser(long id) {
-        userRepo.deleteById(id);
+    public UserDto deleteUser(long id) {
+        User deletedUser = userRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("User","id", id));
+        UserDto deletedDto =userToUserDto(deletedUser);
+        userRepo.delete(deletedUser);
+        return deletedDto;
 
     }
 
     public  UserDto userToUserDto(User user) {
         UserDto dto = new UserDto();
+        dto.setId(user.getId());
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
         dto.setEmail(user.getEmail());
+
         dto.setRole(user.getRole());
         dto.setPassword(user.getPassword());
         return dto;
@@ -78,6 +83,7 @@ public class UserServiceImpl implements UserServiceContract {
 
     public  User userDtoToUser(UserDto dto) {
         User user = new User();
+        user.setId(dto.getId());
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
         user.setEmail(dto.getEmail());

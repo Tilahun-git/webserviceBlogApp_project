@@ -1,4 +1,4 @@
-package com.blogApplication.blogApp.dto;
+package com.blogApplication.blogApp.dto.userDto;
 
 
 import lombok.AllArgsConstructor;
