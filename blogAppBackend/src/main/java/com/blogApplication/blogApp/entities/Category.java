@@ -24,6 +24,6 @@ public class Category {
     @Column(nullable = false)
     private String title;
 
-    @OneToMany(mappedBy = "category")
+    @OneToMany(mappedBy = "category",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     private Set<Post> posts = new HashSet<>();
 }
