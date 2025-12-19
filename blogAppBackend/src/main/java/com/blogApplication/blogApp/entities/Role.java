@@ -10,20 +10,20 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "categories")
-@NoArgsConstructor
-@AllArgsConstructor
+@Table(name = "roles")
 @Getter
 @Setter
-public class Category {
+@NoArgsConstructor
+@AllArgsConstructor
+public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "category_id")
-    private long id;
+    @Column(name = "role_id")
+    private Long id;
 
-    @Column(nullable = false)
-    private String title;
+    private String name;
 
-    @OneToMany(mappedBy = "category")
-    private Set<Post> posts = new HashSet<>();
+    @ManyToMany(mappedBy = "roles")
+    private Set<User> users = new HashSet<>();
+
 }

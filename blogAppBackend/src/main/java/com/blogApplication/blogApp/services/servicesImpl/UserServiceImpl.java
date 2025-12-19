@@ -5,15 +5,18 @@ import com.blogApplication.blogApp.entities.User;
 import com.blogApplication.blogApp.exceptions.ResourceNotFoundException;
 import com.blogApplication.blogApp.repositories.UserRepo;
 import com.blogApplication.blogApp.services.servicesContract.UserServiceContract;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserServiceContract {
 
-
+    @Autowired
     private UserRepo userRepo;
     public UserServiceImpl(UserRepo userRepo){
         this.userRepo = userRepo;
@@ -74,6 +77,7 @@ public class UserServiceImpl implements UserServiceContract {
         dto.setId(user.getId());
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
+        dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
 
         dto.setRole(user.getRole());
@@ -86,6 +90,7 @@ public class UserServiceImpl implements UserServiceContract {
         user.setId(dto.getId());
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
+        user.setUsername(dto.getUsername());
         user.setEmail(dto.getEmail());
         user.setRole(dto.getRole());
         user.setPassword(dto.getPassword());
