@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Table(name = "users")
 @NoArgsConstructor
@@ -17,15 +20,36 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private long id;
-    @Column(nullable = false)
+    @Column
     private String firstName;
-    @Column(nullable = false)
+
+    @Column
     private String lastName;
+
+    @Column(nullable = false,unique = true)
+    private String username;
+
     @Column(nullable = false)
     private String password;
+
     @Column(unique = true,nullable = false)
     private String email;
     @Column(nullable = false)
-    private String role;
+
+    private  String role;
+
+    @ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.PERSIST)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
+
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Post> posts = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Comment> comments = new HashSet<>();
 
 }

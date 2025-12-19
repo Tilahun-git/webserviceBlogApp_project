@@ -6,18 +6,19 @@ import com.blogApplication.blogApp.exceptions.ResourceNotFoundException;
 import com.blogApplication.blogApp.repositories.CategoryRepo;
 import com.blogApplication.blogApp.repositories.UserRepo;
 import com.blogApplication.blogApp.services.servicesContract.CategoryServiceContract;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryServiceContract {
+    @Autowired
     private CategoryRepo categoryRepo;
 
-    public CategoryServiceImpl(CategoryRepo categoryRepo) {
-        this.categoryRepo = categoryRepo;
-    }
 
     @Override
     public List<CategoryDto> getAllCategories() {
@@ -48,7 +49,6 @@ public class CategoryServiceImpl implements CategoryServiceContract {
     public CategoryDto updateCategory(long id, CategoryDto categoryDto) {
         Category categoryTobeUpdated = categoryRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("Category","id",id));
         categoryTobeUpdated.setTitle(categoryDto.getTitle());
-        categoryTobeUpdated.setDescription(categoryDto.getDescription());
         Category updatedCategory = categoryRepo.save(categoryTobeUpdated);
         CategoryDto categoryDtoUpdated = categoryToCategoryDto(updatedCategory);
         return categoryDtoUpdated;
@@ -69,7 +69,6 @@ public class CategoryServiceImpl implements CategoryServiceContract {
         CategoryDto categoryDto = new CategoryDto();
         categoryDto.setId(category.getId());
         categoryDto.setTitle(category.getTitle());
-        categoryDto.setDescription(category.getDescription());
         return categoryDto;
     }
 
@@ -78,7 +77,6 @@ public class CategoryServiceImpl implements CategoryServiceContract {
         Category category = new Category();
         category.setId(categoryDto.getId());
         category.setTitle(categoryDto.getTitle());
-        category.setDescription(categoryDto.getDescription());
         return category;
     }
 }
