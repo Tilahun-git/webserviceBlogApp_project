@@ -21,7 +21,7 @@ public class PostDto {
     private String content;
     private String imageName = "default.png";
     private String author;
-    private CategoryDto category;
-    private UserDto user;
+    private long authorId;
+    private long categoryId;
 
 }

@@ -12,6 +12,7 @@ import com.blogApplication.blogApp.repositories.PostRepo;
 import com.blogApplication.blogApp.repositories.UserRepo;
 import com.blogApplication.blogApp.services.servicesContract.PostServiceContract;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,6 +25,8 @@ public class PostServiceImpl implements PostServiceContract {
     private  final PostRepo postRepo;
     private final UserRepo userRepo;
     private final CategoryRepo categoryRepo;
+    private final ModelMapper modelMapper;
+
 
 
     @Override
@@ -56,7 +59,10 @@ public class PostServiceImpl implements PostServiceContract {
         postCreated.setCategory(category);
         postCreated.setImageName("post.png");
         Post savedPost = postRepo.save(postCreated);
-        return postToPostDto(savedPost);
+        PostDto responseDto = postToPostDto(savedPost);
+        responseDto.setAuthorId(savedPost.getAuthor().getId());
+        responseDto.setCategoryId(savedPost.getCategory().getId());
+        return responseDto;
 
     }
 
@@ -111,48 +117,19 @@ public class PostServiceImpl implements PostServiceContract {
     }
 
 
-    //convert post to PostDto
-    public PostDto postToPostDto(Post post) {
-        PostDto postDto = new PostDto();
-        postDto.setId(post.getId());
-        postDto.setTitle(post.getTitle());
-        postDto.setContent(post.getContent());
+    //convert post -> PostDto
+    private PostDto postToPostDto(Post post) {
 
-        if (post.getAuthor() != null) {
-            UserDto userDto = new UserDto();
-            userDto.setFirstName(post.getAuthor().getFirstName());
-            userDto.setLastName(post.getAuthor().getLastName());
-            userDto.setPassword(post.getAuthor().getPassword());
-            userDto.setRole(post.getAuthor().getRole());
-            userDto.setId(post.getAuthor().getId());
-            userDto.setUsername(post.getAuthor().getUsername());
-            userDto.setEmail(post.getAuthor().getEmail());
-            postDto.setUser(userDto);
 
-            // Optionally also set author name as a string
-            postDto.setAuthor(post.getAuthor().getUsername());
-        }
-
-        // Map category to CategoryDto
-        if (post.getCategory() != null) {
-            CategoryDto categoryDto = new CategoryDto();
-            categoryDto.setId(post.getCategory().getId());
-            categoryDto.setTitle(post.getCategory().getTitle());
-            postDto.setCategory(categoryDto);
-        }
-        return postDto;
-
+        return modelMapper.map(post, PostDto.class);
     }
 
+    //convert PostDto -> Post
 
-    //convert PostDto to Post
-    public Post postDtoToPost(PostDto postDto) {
-        Post post = new Post();
-        post.setId(postDto.getId());
-        post.setTitle(postDto.getTitle());
-        post.setContent(postDto.getContent());
-        return post;
+    private Post postDtoToPost(PostDto postDto) {
+        return modelMapper.map(postDto, Post.class);
     }
+
 
 
 }
