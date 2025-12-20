@@ -21,7 +21,13 @@ public class Category {
     @Column(name = "category_id")
     private long id;
 
-    @Column(nullable = false)
+    @Column(name = "category_name")
+    private String categoryName;
+
+    @Column(name = "category_description")
+    private String categoryDescription;
+
+    @Column
     private String title;
 
     @OneToMany(mappedBy = "category")

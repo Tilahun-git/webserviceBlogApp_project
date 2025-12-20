@@ -31,6 +31,7 @@ public class Comment {
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
+    @Column
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
