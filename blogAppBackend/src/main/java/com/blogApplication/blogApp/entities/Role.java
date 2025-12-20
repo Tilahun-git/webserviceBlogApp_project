@@ -21,7 +21,11 @@ public class Role {
     @Column(name = "role_id")
     private Long id;
 
-    private String name;
+    @Column(name = "role_name")
+    private String roleName;
+
+    @Column(name = "role_description")
+    private String roleDescription;
 
     @ManyToMany(mappedBy = "roles")
     private Set<User> users = new HashSet<>();
