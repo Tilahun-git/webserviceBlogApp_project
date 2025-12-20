@@ -5,7 +5,10 @@ import com.blogApplication.blogApp.entities.User;
 import com.blogApplication.blogApp.exceptions.ResourceNotFoundException;
 import com.blogApplication.blogApp.repositories.UserRepo;
 import com.blogApplication.blogApp.services.servicesContract.UserServiceContract;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,19 +17,18 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@AllArgsConstructor
 public class UserServiceImpl implements UserServiceContract {
-
+    @Autowired
+    private  ModelMapper modelMapper;
     @Autowired
     private UserRepo userRepo;
-    public UserServiceImpl(UserRepo userRepo){
-        this.userRepo = userRepo;
-    }
+
     @Override
     public UserDto getUser(long id) {
 
         User user = userRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("User","id",id));
-        UserDto userDtoFound = userToUserDto(user);
-        return userDtoFound;
+        return userToUserDto(user);
     }
 
     @Override
@@ -44,8 +46,7 @@ public class UserServiceImpl implements UserServiceContract {
     public UserDto createUser(UserDto userDto) {
         User createdUser =userRepo.save(userDtoToUser(userDto));
 
-        UserDto createdUserDto = userToUserDto(createdUser);
-        return createdUserDto;
+        return userToUserDto(createdUser);
     }
 
     @Override
@@ -56,7 +57,6 @@ public class UserServiceImpl implements UserServiceContract {
         existingUser.setLastName(userDto.getLastName());
         existingUser.setEmail(userDto.getEmail());
         existingUser.setPassword(userDto.getPassword());
-        existingUser.setRole(userDto.getRole());
 
         User updatedUser = userRepo.save(existingUser);
         return userToUserDto(updatedUser);
@@ -72,29 +72,14 @@ public class UserServiceImpl implements UserServiceContract {
 
     }
 
+    // convert user -> dto
     public  UserDto userToUserDto(User user) {
-        UserDto dto = new UserDto();
-        dto.setId(user.getId());
-        dto.setFirstName(user.getFirstName());
-        dto.setLastName(user.getLastName());
-        dto.setUsername(user.getUsername());
-        dto.setEmail(user.getEmail());
-
-        dto.setRole(user.getRole());
-        dto.setPassword(user.getPassword());
-        return dto;
+        return  modelMapper.map(user, UserDto.class);
     }
 
+    // convert dto -> user
     public  User userDtoToUser(UserDto dto) {
-        User user = new User();
-        user.setId(dto.getId());
-        user.setFirstName(dto.getFirstName());
-        user.setLastName(dto.getLastName());
-        user.setUsername(dto.getUsername());
-        user.setEmail(dto.getEmail());
-        user.setRole(dto.getRole());
-        user.setPassword(dto.getPassword());
-        return user;
+        return  modelMapper.map(dto, User.class);
     }
 
 
