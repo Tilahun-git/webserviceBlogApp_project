@@ -1,14 +1,17 @@
 package com.blogApplication.blogApp.entities;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -18,16 +21,16 @@ import java.util.Set;
 @Setter
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
-    private long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY) //@UUIDGenerator
+    private Long id;
+
     @Column
     private String firstName;
 
     @Column
     private String lastName;
 
-    @Column(nullable = false,unique = true)
+    @Column(unique = true)
     private String username;
 
     @Column(nullable = false)
@@ -35,9 +38,22 @@ public class User {
 
     @Column(unique = true,nullable = false)
     private String email;
-    @Column(nullable = false)
 
-    @ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.PERSIST)
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column
+    private LocalDateTime updatedAt;
+
+    @Column(name = "is_active", nullable = false )
+    private boolean isActive = false;
+
+    @ManyToMany(
+            fetch = FetchType.EAGER,
+            cascade = CascadeType.PERSIST
+    )
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -45,12 +61,21 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
-    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @OneToMany(
+            fetch = FetchType.LAZY,
+            mappedBy = "author",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
     private Set<Post> posts = new HashSet<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @OneToMany(
+            fetch = FetchType.LAZY,
+            mappedBy = "user",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
     private Set<Comment> comments = new HashSet<>();
+
 
 }
