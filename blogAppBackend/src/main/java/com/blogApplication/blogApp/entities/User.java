@@ -35,7 +35,6 @@ public class User {
 
     @Column(unique = true,nullable = false)
     private String email;
-    @Column(nullable = false)
 
     @ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.PERSIST)
     @JoinTable(

@@ -1,8 +1,6 @@
 package com.blogApplication.blogApp.services.servicesImpl;
 
-import com.blogApplication.blogApp.dto.categoryDto.CategoryDto;
-import com.blogApplication.blogApp.dto.postDto.PostDto;
-import com.blogApplication.blogApp.dto.userDto.UserDto;
+import com.blogApplication.blogApp.dto.postDto.PostResponseDto;
 import com.blogApplication.blogApp.entities.Category;
 import com.blogApplication.blogApp.entities.Post;
 import com.blogApplication.blogApp.entities.User;
@@ -30,7 +28,7 @@ public class PostServiceImpl implements PostServiceContract {
 
 
     @Override
-    public  List<PostDto> getAllPosts() {
+    public  List<PostResponseDto> getAllPosts() {
         List<Post> posts = postRepo.findAll();
         if (posts.isEmpty()) {
             throw new ResourceNotFoundException("Post","There is no post found",null);
@@ -38,13 +36,13 @@ public class PostServiceImpl implements PostServiceContract {
         return posts.stream().map(this::postToPostDto).collect(Collectors.toList());
     }
     @Override
-    public PostDto getPost(long id) {
+    public PostResponseDto getPost(long id) {
         Post foundPost = postRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("Post","id",id));
         return postToPostDto(foundPost);
     }
 
     @Override
-    public PostDto createPost(PostDto postDto,long authorId, long categoryId) {
+    public PostResponseDto createPost(PostResponseDto postDto, long authorId, long categoryId) {
 
 
         User user = userRepo.findById(authorId)
@@ -59,7 +57,7 @@ public class PostServiceImpl implements PostServiceContract {
         postCreated.setCategory(category);
         postCreated.setImageName("post.png");
         Post savedPost = postRepo.save(postCreated);
-        PostDto responseDto = postToPostDto(savedPost);
+        PostResponseDto responseDto = postToPostDto(savedPost);
         responseDto.setAuthorId(savedPost.getAuthor().getId());
         responseDto.setCategoryId(savedPost.getCategory().getId());
         return responseDto;
@@ -67,7 +65,7 @@ public class PostServiceImpl implements PostServiceContract {
     }
 
     @Override
-    public PostDto updatePost(PostDto postDto, long id) {
+    public PostResponseDto updatePost(PostResponseDto postDto, long id) {
         Post existingPost = postRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("Post","id",id));
         existingPost.setTitle(postDto.getTitle());
         existingPost.setContent(postDto.getContent());
@@ -75,7 +73,7 @@ public class PostServiceImpl implements PostServiceContract {
         return postToPostDto(existingPost);    }
 
     @Override
-    public PostDto deletePostById(long id) {
+    public PostResponseDto deletePostById(long id) {
         Post deletedPost = postRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("Post","id",id));
         postRepo.delete(deletedPost);
         return postToPostDto(deletedPost);
@@ -85,7 +83,7 @@ public class PostServiceImpl implements PostServiceContract {
     // method to get all posts in authored by a certain user
 
     @Override
-    public List<PostDto> getAllPostsByUser(long id) {
+    public List<PostResponseDto> getAllPostsByUser(long id) {
 
         User user = userRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User","id",id));
@@ -99,7 +97,7 @@ public class PostServiceImpl implements PostServiceContract {
 
     // method to get all posts in a certain category
     @Override
-    public List<PostDto> getAllPostsByCategory(long id) {
+    public List<PostResponseDto> getAllPostsByCategory(long id) {
         Category category = categoryRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category","id",id));
 
@@ -112,21 +110,21 @@ public class PostServiceImpl implements PostServiceContract {
 
     // method to search posts using keyword
     @Override
-    public List<PostDto> searchPosts(String keyword) {
+    public List<PostResponseDto> searchPosts(String keyword) {
         return List.of();
     }
 
 
     //convert post -> PostDto
-    private PostDto postToPostDto(Post post) {
+    private PostResponseDto postToPostDto(Post post) {
 
 
-        return modelMapper.map(post, PostDto.class);
+        return modelMapper.map(post, PostResponseDto.class);
     }
 
     //convert PostDto -> Post
 
-    private Post postDtoToPost(PostDto postDto) {
+    private Post postDtoToPost(PostResponseDto postDto) {
         return modelMapper.map(postDto, Post.class);
     }
 

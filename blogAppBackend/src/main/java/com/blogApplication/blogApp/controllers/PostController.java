@@ -1,6 +1,6 @@
 package com.blogApplication.blogApp.controllers;
 
-import com.blogApplication.blogApp.dto.postDto.PostDto;
+import com.blogApplication.blogApp.dto.postDto.PostResponseDto;
 import com.blogApplication.blogApp.services.servicesImpl.PostServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,8 +21,8 @@ public class PostController {
     // GET METHOD TO RETRIEVE ALL POSTS
 
     @GetMapping("/posts")
-    public ResponseEntity <List<PostDto>> getAllPosts() {
-        List<PostDto> postsDto = postService.getAllPosts();
+    public ResponseEntity <List<PostResponseDto>> getAllPosts() {
+        List<PostResponseDto> postsDto = postService.getAllPosts();
 
         return ResponseEntity.ok(postsDto);
     }
@@ -30,15 +30,15 @@ public class PostController {
     //GET METHOD TO RETRIEVE SINGLE POST
 
     @GetMapping("post/{id}")
-    public ResponseEntity<PostDto> getPostById(@PathVariable long id) {
+    public ResponseEntity<PostResponseDto> getPostById(@PathVariable long id) {
         return  ResponseEntity.ok( postService.getPost(id));
     }
 
     //POST METHOD TO ADD POST
 
     @PostMapping(value ="/user/{userId}/category/{categoryId}/posts",consumes = "application/json")
-    public ResponseEntity<Map<String, Object>> addPost(@RequestBody PostDto postDto, @PathVariable long userId, @PathVariable long categoryId) {
-        PostDto createdPost = postService.createPost(postDto, userId, categoryId);
+    public ResponseEntity<Map<String, Object>> addPost(@RequestBody PostResponseDto postDto, @PathVariable long userId, @PathVariable long categoryId) {
+        PostResponseDto createdPost = postService.createPost(postDto, userId, categoryId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Post created successfully");
@@ -50,9 +50,9 @@ public class PostController {
     //PUT METHOD TO UPDATE THE EXISTING POST
 
     @PutMapping("post/{id}")
-    public ResponseEntity<Map<String,Object>> updatePost(@PathVariable long id, @RequestBody PostDto postDto) {
+    public ResponseEntity<Map<String,Object>> updatePost(@PathVariable long id, @RequestBody PostResponseDto postDto) {
 
-        PostDto updatedPost = postService.updatePost(postDto,id);
+        PostResponseDto updatedPost = postService.updatePost(postDto,id);
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Post updated successfully");
         response.put("post", updatedPost);
@@ -63,7 +63,7 @@ public class PostController {
     //DELETE  METHOD TO DELETE SINGLE POST
     @DeleteMapping("/post/{id}")
     public ResponseEntity<Map<String, Object>> deletePost(@PathVariable long id) {
-        PostDto deletedPost = postService.deletePostById(id);
+        PostResponseDto deletedPost = postService.deletePostById(id);
 
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Post deleted successfully");
@@ -76,16 +76,16 @@ public class PostController {
     // GET METHOD TO RETRIEVE ALL POSTS OF SINGLE USER
 
     @GetMapping("/user/{userId}/posts")
-    public ResponseEntity<List<PostDto>> getPostsByUser(@PathVariable long userId) {
-        List<PostDto> postDtosUser = postService.getAllPostsByUser(userId);
-        return new ResponseEntity<List<PostDto>>(postDtosUser,HttpStatus.OK);
+    public ResponseEntity<List<PostResponseDto>> getPostsByUser(@PathVariable long userId) {
+        List<PostResponseDto> postDtosUser = postService.getAllPostsByUser(userId);
+        return new ResponseEntity<List<PostResponseDto>>(postDtosUser,HttpStatus.OK);
     }
 
     // GET METHOD TO RETRIEVE ALL POSTS OF SINGLE CATEGORY
 
     @GetMapping("/category/{categoryId}/posts")
-    public ResponseEntity<List<PostDto>> getPostsByCategory(@PathVariable long categoryId) {
-        List<PostDto> postDtosCategory = postService.getAllPostsByCategory(categoryId);
-        return new ResponseEntity<List<PostDto>>(postDtosCategory,HttpStatus.OK);
+    public ResponseEntity<List<PostResponseDto>> getPostsByCategory(@PathVariable long categoryId) {
+        List<PostResponseDto> postDtosCategory = postService.getAllPostsByCategory(categoryId);
+        return new ResponseEntity<List<PostResponseDto>>(postDtosCategory,HttpStatus.OK);
     }
 }

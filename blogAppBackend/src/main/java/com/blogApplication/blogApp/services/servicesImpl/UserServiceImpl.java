@@ -56,7 +56,6 @@ public class UserServiceImpl implements UserServiceContract {
         existingUser.setFirstName(userDto.getFirstName());
         existingUser.setLastName(userDto.getLastName());
         existingUser.setEmail(userDto.getEmail());
-        existingUser.setPassword(userDto.getPassword());
 
         User updatedUser = userRepo.save(existingUser);
         return userToUserDto(updatedUser);

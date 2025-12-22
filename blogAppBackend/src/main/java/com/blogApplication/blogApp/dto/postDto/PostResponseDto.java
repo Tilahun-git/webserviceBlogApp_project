@@ -1,20 +1,18 @@
 package com.blogApplication.blogApp.dto.postDto;
 
 
-import com.blogApplication.blogApp.dto.categoryDto.CategoryDto;
-import com.blogApplication.blogApp.dto.userDto.UserDto;
-import com.blogApplication.blogApp.entities.Category;
-import com.blogApplication.blogApp.entities.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostDto {
+public class PostResponseDto {
 
     private long id;
     private String title;
@@ -23,5 +21,8 @@ public class PostDto {
     private String author;
     private long authorId;
     private long categoryId;
+    private Long likeCount;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 }

@@ -1,17 +1,17 @@
 package com.blogApplication.blogApp.services.servicesContract;
 
-import com.blogApplication.blogApp.dto.postDto.PostDto;
+import com.blogApplication.blogApp.dto.postDto.PostResponseDto;
 import java.util.List;
 
 public interface PostServiceContract {
-    List<PostDto> getAllPosts();
-    PostDto getPost(long id);
-    PostDto createPost(PostDto postDto, long authorId, long categoryId);
-    PostDto updatePost(PostDto postDto,long id);
-    PostDto deletePostById(long id);
-    List<PostDto> getAllPostsByUser(long id);
-    List<PostDto> getAllPostsByCategory(long id);
-    List<PostDto> searchPosts(String keyword);
+    List<PostResponseDto> getAllPosts();
+    PostResponseDto getPost(long id);
+    PostResponseDto createPost(PostResponseDto postDto, long authorId, long categoryId);
+    PostResponseDto updatePost(PostResponseDto postDto, long id);
+    PostResponseDto deletePostById(long id);
+    List<PostResponseDto> getAllPostsByUser(long id);
+    List<PostResponseDto> getAllPostsByCategory(long id);
+    List<PostResponseDto> searchPosts(String keyword);
 
 
 
