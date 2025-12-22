@@ -1,6 +1,8 @@
 package com.blogApplication.blogApp.services.servicesImpl;
 
+import com.blogApplication.blogApp.dto.categoryDto.CategoryDto;
 import com.blogApplication.blogApp.dto.postDto.PostDto;
+import com.blogApplication.blogApp.dto.userDto.UserDto;
 import com.blogApplication.blogApp.entities.Category;
 import com.blogApplication.blogApp.entities.Post;
 import com.blogApplication.blogApp.entities.User;
@@ -8,7 +10,9 @@ import com.blogApplication.blogApp.exceptions.ResourceNotFoundException;
 import com.blogApplication.blogApp.repositories.CategoryRepo;
 import com.blogApplication.blogApp.repositories.PostRepo;
 import com.blogApplication.blogApp.repositories.UserRepo;
+import com.blogApplication.blogApp.services.servicesContract.PostServiceContract;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,14 +20,16 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class PostServiceImpl {
+public class PostServiceImpl implements PostServiceContract {
 
     private  final PostRepo postRepo;
     private final UserRepo userRepo;
     private final CategoryRepo categoryRepo;
+    private final ModelMapper modelMapper;
 
 
 
+    @Override
     public  List<PostDto> getAllPosts() {
         List<Post> posts = postRepo.findAll();
         if (posts.isEmpty()) {
@@ -31,65 +37,99 @@ public class PostServiceImpl {
         }
         return posts.stream().map(this::postToPostDto).collect(Collectors.toList());
     }
-
+    @Override
     public PostDto getPost(long id) {
         Post foundPost = postRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("Post","id",id));
         return postToPostDto(foundPost);
     }
 
+    @Override
+    public PostDto createPost(PostDto postDto,long authorId, long categoryId) {
 
-    public PostDto createPost(PostDto postDto) {
 
-
-        User user = userRepo.findByUsername(postDto.getAuthor())
+        User user = userRepo.findById(authorId)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found with username: " + postDto.getAuthor()));
+                        new ResourceNotFoundException("User","id",authorId));
 
-        Category category = categoryRepo.findById(postDto.getCategoryId())
+        Category category = categoryRepo.findById(categoryId)
                 .orElseThrow(() ->
-                        new RuntimeException("Category not found with id: " + postDto.getCategoryId()));
+                        new ResourceNotFoundException("Category","id",categoryId));
         Post postCreated = postDtoToPost(postDto);
         postCreated.setAuthor(user);
         postCreated.setCategory(category);
+        postCreated.setImageName("post.png");
         Post savedPost = postRepo.save(postCreated);
-        
-        return postToPostDto(savedPost);
+        PostDto responseDto = postToPostDto(savedPost);
+        responseDto.setAuthorId(savedPost.getAuthor().getId());
+        responseDto.setCategoryId(savedPost.getCategory().getId());
+        return responseDto;
+
     }
 
-    public PostDto updatePost(long id, PostDto postDto) {
+    @Override
+    public PostDto updatePost(PostDto postDto, long id) {
         Post existingPost = postRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("Post","id",id));
         existingPost.setTitle(postDto.getTitle());
         existingPost.setContent(postDto.getContent());
         postRepo.save(existingPost);
-        return postToPostDto(existingPost);
+        return postToPostDto(existingPost);    }
+
+    @Override
+    public PostDto deletePostById(long id) {
+        Post deletedPost = postRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("Post","id",id));
+        postRepo.delete(deletedPost);
+        return postToPostDto(deletedPost);
     }
 
 
+    // method to get all posts in authored by a certain user
 
+    @Override
+    public List<PostDto> getAllPostsByUser(long id) {
 
+        User user = userRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User","id",id));
 
+        List<Post> posts = postRepo.getAllByAuthor(user);
 
-    //convert post to PostDto
-    public PostDto postToPostDto(Post post) {
-        PostDto postDto = new PostDto();
-        postDto.setId(post.getId());
-        postDto.setTitle(post.getTitle());
-        postDto.setContent(post.getContent());
-        postDto.setAuthor(post.getAuthor().getUsername());
-        postDto.setCategoryId(post.getCategory().getId());
-        return postDto;
+        return posts.stream()
+                .map(this::postToPostDto)
+                .collect(Collectors.toList());
+    }
 
+    // method to get all posts in a certain category
+    @Override
+    public List<PostDto> getAllPostsByCategory(long id) {
+        Category category = categoryRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category","id",id));
+
+        List<Post> posts = postRepo.getAllByCategory(category);
+
+        return posts.stream()
+                .map(this::postToPostDto)
+                .collect(Collectors.toList());
+    }
+
+    // method to search posts using keyword
+    @Override
+    public List<PostDto> searchPosts(String keyword) {
+        return List.of();
     }
 
 
-    //convert PostDto to Post
-    public Post postDtoToPost(PostDto postDto) {
-        Post post = new Post();
-        post.setId(postDto.getId());
-        post.setTitle(postDto.getTitle());
-        post.setContent(postDto.getContent());
-        return post;
+    //convert post -> PostDto
+    private PostDto postToPostDto(Post post) {
+
+
+        return modelMapper.map(post, PostDto.class);
     }
+
+    //convert PostDto -> Post
+
+    private Post postDtoToPost(PostDto postDto) {
+        return modelMapper.map(postDto, Post.class);
+    }
+
 
 
 }

@@ -12,7 +12,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/categories")
 public class CategoryController {
-    private CategoryServiceImpl categoryServiceImpl;
+    private final CategoryServiceImpl categoryServiceImpl;
     public CategoryController(CategoryServiceImpl categoryServiceImpl) {
         this.categoryServiceImpl = categoryServiceImpl;
     }
