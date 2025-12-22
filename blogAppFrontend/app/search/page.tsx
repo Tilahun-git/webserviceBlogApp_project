@@ -1,17 +1,21 @@
 "use client";
 
-import { useEffect, useState, ChangeEvent, FormEvent } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import PostCard from "@/components/PostCard";
+import { Search, X, Clock } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
-interface SidebarData {
-  searchTerm: string;
-  sort: "asc" | "desc";
-  category: string;
-}
+const HISTORY_KEY = "blog_search_history";
 
 interface Post {
   _id: string;
@@ -25,259 +29,356 @@ interface Post {
   };
 }
 
-interface ApiResponse {
-  posts: Post[];
-  page: number;
-  totalPages: number;
-  totalElements: number;
+interface SearchHistoryProps {
+  history: string[];
+  onClickTerm: (term: string) => void;
+  onRemoveTerm: (term: string) => void;
+  onClearAll: () => void;
 }
 
-export default function Search() {
-  const searchParams = useSearchParams();
+function SearchHistory({
+  history,
+  onClickTerm,
+  onRemoveTerm,
+  onClearAll,
+}: SearchHistoryProps) {
+  return (
+    <AnimatePresence>
+      {history.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 4 }}
+          className="mt-4 bg-neutral-100 dark:bg-neutral-800 p-4 rounded-lg shadow relative max-h-52 overflow-y-auto"
+        >
+          <div className="text-sm text-gray-500 mb-2 font-semibold">
+            Recent Searches
+          </div>
+          <ul className="space-y-2">
+            {history.map((term, i) => (
+              <li
+                key={i}
+                className="flex items-center justify-between gap-2 text-gray-700 dark:text-gray-300 cursor-pointer 
+            rounded px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+              >
+                <div
+                  onClick={() => onClickTerm(term)}
+                  className="flex items-center gap-2 flex-1 select-none"
+                >
+                  <Clock className="w-4 h-4" />
+                  <span>{term}</span>
+                </div>
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemoveTerm(term);
+                  }}
+                  className="p-1 hover:text-red-500 text-red-400" >
+                  <X className="w-4 h-4" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+          <button
+            onClick={onClearAll}
+            className="absolute bottom-2 right-2 text-xs text-blue-500 hover:text-red-500 transition" >
+            Clear All
+          </button>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+export default function SearchPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const [sidebarData, setSidebarData] = useState<SidebarData>({
-    searchTerm: "",
-    sort: "desc",
-    category: "uncategorized",
-  });
+  const inputRef = useRef<HTMLInputElement>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [query, setQuery] = useState(searchParams.get("q") || "");
+  const [results, setResults] = useState<Post[]>([]);
+  const [history, setHistory] = useState<string[]>([]);
+  const [filterCategory, setFilterCategory] = useState(
+    searchParams.get("category") || "all"
+  );
+  const [sortOrder, setSortOrder] = useState(
+    searchParams.get("sort") || "desc"
+  );
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
 
-  // Sync URL params to state
+  const categories = ["all", "reactjs", "nextjs", "javascript"];
+
+  // Load history
   useEffect(() => {
-    const searchTerm = searchParams.get("searchTerm") || "";
-    const sort = (searchParams.get("sort") as "asc" | "desc") || "desc";
-    const category = searchParams.get("category") || "uncategorized";
-    const pageNum = parseInt(searchParams.get("page") || "1", 10);
+    const saved = localStorage.getItem(HISTORY_KEY);
+    if (saved) setHistory(JSON.parse(saved));
+    inputRef.current?.focus();
+  }, []);
 
-    setSidebarData({ searchTerm, sort, category });
-    setPage(pageNum);
-    fetchPosts({ searchTerm, sort, category, page: pageNum });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams.toString()]);
+  const saveToHistory = useCallback(
+    (term: string) => {
+      const updated = [term, ...history.filter((h) => h !== term)].slice(0, 5);
+      setHistory(updated);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+    },
+    [history]
+  );
+
+  const clearHistory = useCallback(() => {
+    localStorage.removeItem(HISTORY_KEY);
+    setHistory([]);
+  }, []);
 
   // Fetch posts
-  const fetchPosts = async ({
-    searchTerm,
-    sort,
-    category,
-    page = 1,
-  }: {
-    searchTerm: string;
-    sort: "asc" | "desc";
-    category: string;
-    page?: number;
-  }) => {
-    setLoading(true);
-    try {
-      const query = new URLSearchParams({
-        searchTerm,
-        sort,
-        category,
-        page: page.toString(),
-      }).toString();
+  const fetchPosts = useCallback(
+    async (q: string, pg = 1, append = false) => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({
+          searchTerm: q,
+          category: filterCategory,
+          sort: sortOrder,
+          startIndex: ((pg - 1) * 10).toString(),
+        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/post/getposts?${params}`
+        );
+        const data = await res.json();
+        setTotalPages(Math.ceil(data.totalCount / 10));
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/post/getposts?${query}`
-      );
-      if (!res.ok) return;
+        if (append) setResults((prev) => [...prev, ...data.posts]);
+        else setResults(data.posts);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [filterCategory, sortOrder]
+  );
 
-      const data: ApiResponse = await res.json();
-      setPosts(data.posts);
-      setTotalPages(data.totalPages);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+  // Update URL whenever filters or query change
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (filterCategory) params.set("category", filterCategory);
+    if (sortOrder) params.set("sort", sortOrder);
+    router.replace(`/search?${params.toString()}`);
+  }, [query, filterCategory, sortOrder, router]);
+
+  // Search input effect
+  useEffect(() => {
+    if (query.length < 2) {
+      setResults([]);
+      setPage(1);
+      return;
     }
+
+    const delay = setTimeout(async () => {
+      await fetchPosts(query, 1);
+      setPage(1);
+      saveToHistory(query);
+    }, 300);
+
+    return () => clearTimeout(delay);
+  }, [query, filterCategory, sortOrder, fetchPosts, saveToHistory]);
+
+  // Infinite scroll
+  const loadMore = useCallback(async () => {
+    if (!query || page >= totalPages) return;
+    const nextPage = page + 1;
+    await fetchPosts(query, nextPage, true);
+    setPage(nextPage);
+  }, [query, page, totalPages, fetchPosts]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) loadMore();
+      },
+      { threshold: 1 }
+    );
+    const current = loadMoreRef.current;
+    if (current) observer.observe(current);
+    return () => {
+      if (current) observer.unobserve(current);
+    };
+  }, [loadMore]);
+
+  const handlePrev = async () => {
+    if (page <= 1) return;
+    const prevPage = page - 1;
+    await fetchPosts(query, prevPage);
+    setPage(prevPage);
   };
 
-  // Handle input changes
-  const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { id, value } = e.target;
-    setSidebarData((prev) => ({ ...prev, [id]: value }));
+  const handleNext = async () => {
+    if (page >= totalPages) return;
+    const nextPage = page + 1;
+    await fetchPosts(query, nextPage);
+    setPage(nextPage);
   };
 
-  // Apply filters
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    const query = new URLSearchParams({ ...sidebarData, page: "1" }).toString();
-    router.push(`/search?${query}`);
-  };
-
-  // Navigate to page
-  const goToPage = (newPage: number) => {
-    const query = new URLSearchParams({
-      ...sidebarData,
-      page: newPage.toString(),
-    }).toString();
-    router.push(`/search?${query}`);
-  };
-
-  // Generate page numbers with ellipsis
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxButtons = 5;
-    let start = Math.max(2, page - Math.floor(maxButtons / 2));
-    const end = Math.min(totalPages - 1, start + maxButtons - 1);
-
-    start = Math.max(2, Math.min(start, totalPages - maxButtons));
-
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
+  const highlight = (text: string) => {
+    if (!query) return text;
+    const regex = new RegExp(`(${query})`, "gi");
+    return text.split(regex).map((part, i) =>
+      part.toLowerCase() === query.toLowerCase() ? (
+        <mark key={i} className="bg-yellow-400 text-black px-1 rounded">
+          {part}
+        </mark>
+      ) : (
+        part
+      )
+    );
   };
 
   return (
-    <div className="flex flex-col md:flex-row">
-      {/* Sidebar */}
-      <div className="p-7 border-b md:border-r md:min-h-screen border-gray-500">
-        <form className="flex flex-col gap-8" onSubmit={handleSubmit}>
-          <div className="flex items-center gap-2">
-            <label className="whitespace-nowrap font-semibold">
-              Search Term:
-            </label>
-            <Input
-              placeholder="Search..."
-              id="searchTerm"
-              value={sidebarData.searchTerm}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label className="font-semibold">Sort:</label>
-            <Select value={sidebarData.sort} onValueChange={(value) => setSidebarData(prev => ({ ...prev, sort: value as "asc" | "desc" }))}>
-              <option value="desc">Latest</option>
-              <option value="asc">Oldest</option>
-            </Select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label className="font-semibold">Category:</label>
-            <Select
-              value={sidebarData.category}
-              onValueChange={(value) => setSidebarData(prev => ({ ...prev, category: value }))}
-            >
-              <option value="uncategorized">Uncategorized</option>
-              <option value="reactjs">React.js</option>
-              <option value="nextjs">Next.js</option>
-              <option value="javascript">JavaScript</option>
-            </Select>
-          </div>
-
-          <Button type="submit">Apply Filters</Button>
-        </form>
-      </div>
-
-      {/* Posts List */}
-      <div className="w-full">
-        <h1 className="text-3xl font-semibold sm:border-b border-gray-500 p-3 mt-5">
-          Posts results:
-        </h1>
-
-        <div className="p-7 flex flex-wrap gap-4">
-          {loading && <p className="text-xl text-gray-500">Loading...</p>}
-          {!loading && posts.length === 0 && (
-            <p className="text-xl text-gray-500">No posts found.</p>
+    <div className="min-h-screen  bg-gray-50 dark:bg-gray-900  py-20 rounded">
+      <div className="max-w-4xl mx-auto">
+        {/* Search Input */}
+        <div className="flex items-center px-2 py-3 rounded shadow-md ring-1 ring-neutral-700">
+          <Search className="w-5 h-5 text-gray-400" />
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Search posts..."
+            className="flex-1 bg-transparent outline-none px-3 text-sm transparent-colors placeholder-gray-500"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) =>
+              e.key === "Enter" && results[0] &&
+              router.push(`/post/${results[0]._id}`)
+            }/>
+          {query && (
+            <Button
+              onClick={() => setQuery("")}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-white">
+              <X className="w-4 h-4" />
+            </Button>
           )}
-          {posts.map((post) => (
-            <PostCard key={post._id} post={post} />
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap gap-2 mt-4 items-center">
+          <label htmlFor="category-select" className="sr-only">
+            Filter by Category
+          </label>
+          <Select
+            defaultValue="category-select"
+            value={filterCategory}
+            onValueChange={(value: string) => setFilterCategory(value)}>
+            <SelectTrigger className="px-3 py-1 rounded border border-gray-400 dark:border-gray-600 text-gray-700 dark:text-gray-300">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {cat === "all"
+                    ? "All Categories"
+                    : cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <label htmlFor="sort-select" className="sr-only">
+            Sort Posts
+          </label>
+          <Select
+            defaultValue="sort-select"
+            value={sortOrder}
+            onValueChange={(value: string) => setSortOrder(value)}>
+            <SelectTrigger className="px-3 py-1 rounded border border-gray-400 dark:border-gray-600 text-gray-700 dark:text-gray-300">
+              <SelectValue placeholder="Sort" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="desc">Latest First</SelectItem>
+              <SelectItem value="asc">Oldest First</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Search History */}
+        {query.length < 2 && history.length > 0 && (
+          <SearchHistory
+            history={history}
+            onClickTerm={(term) => setQuery(term)}
+            onRemoveTerm={(term) => {
+              const filtered = history.filter((h) => h !== term);
+              setHistory(filtered);
+              localStorage.setItem(HISTORY_KEY, JSON.stringify(filtered));
+            }}
+            onClearAll={clearHistory}
+          />
+        )}
+
+        {/* Search Results */}
+        <div className="mt-6 flex flex-wrap gap-4 justify-center">
+          {results.length === 0 && !loading && query.length >= 2 && (
+            <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-gray-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-24 h-24 text-gray-300"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-4.35-4.35M5 11a7 7 0 1114 0 7 7 0 01-14 0z"
+                />
+              </svg>
+              <p className="text-lg font-medium">No results found</p>
+            </div>
+          )}
+
+          {results.map((post) => (
+            <PostCard
+              key={post._id}
+              post={{
+                ...post,
+                title: highlight(post.title) as string,
+                content: highlight(post.content) as string,
+              }}
+            />
           ))}
         </div>
 
-        {/* Full Pagination */}
-        {!loading && totalPages > 1 && (
-          <div className="flex justify-center mt-6 overflow-x-auto py-2">
-            <div className="flex gap-2 min-w-max items-center">
-              {/* First */}
-              <Button
-                disabled={page === 1}
-                onClick={() => goToPage(1)}
-                variant="outline"
-              >
-                &laquo; First
-              </Button>
+        {/* Infinite Scroll Loader */}
+        {loading && (
+          <div className="flex justify-center py-6">
+            <Spinner className="w-6 h-6 text-teal-600 dark:text-teal-400" />
+          </div>
+        )}
+        <div ref={loadMoreRef}></div>
 
-              {/* Previous */}
-              <Button
-                disabled={page === 1}
-                onClick={() => goToPage(page - 1)}
-                variant="outline"
-              >
-                Previous
-              </Button>
-
-              {/* Page Numbers with Ellipsis */}
-              {getPageNumbers().map((p, index, arr) => {
-                // Start ellipsis
-                if (index === 0 && p > 2) {
-                  return (
-                    <div key={p} className="flex gap-2">
-                      <Button
-                        onClick={() => goToPage(2)}
-                        variant={page === 2 ? "default" : "outline"}
-                      >
-                        2
-                      </Button>
-                      <span className="px-2 py-1">…</span>
-                    </div>
-                  );
-                }
-
-                // End ellipsis
-                if (index === arr.length - 1 && p < totalPages - 1) {
-                  return (
-                    <div key={p} className="flex gap-2">
-                      <span className="px-2 py-1">…</span>
-                      <Button
-                        onClick={() => goToPage(totalPages - 1)}
-                        variant={
-                          page === totalPages - 1 ? "default" : "outline"
-                        }
-                      >
-                        {totalPages - 1}
-                      </Button>
-                    </div>
-                  );
-                }
-
-                return (
-                  <Button
-                    key={p}
-                    onClick={() => goToPage(p)}
-                    variant={p === page ? "default" : "outline"}
-                  >
-                    {p}
-                  </Button>
-                );
-              })}
-
-              {/* Next */}
-              <Button
-                disabled={page === totalPages}
-                onClick={() => goToPage(page + 1)}
-                variant="outline"
-              >
-                Next
-              </Button>
-
-              {/* Last */}
-              <Button
-                disabled={page === totalPages}
-                onClick={() => goToPage(totalPages)}
-                variant="outline"
-              >
-                Last &raquo;
-              </Button>
-            </div>
+        {/* Manual Pagination */}
+        {results.length > 0 && (
+          <div className="flex justify-center items-center gap-4 mt-6">
+            <Button
+              onClick={handlePrev}
+              disabled={page === 1}
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50"
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              Page {page} of {totalPages}
+            </span>
+            <Button
+              onClick={handleNext}
+              disabled={page >= totalPages}
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50"
+            >
+              Next
+            </Button>
           </div>
         )}
       </div>
