@@ -49,7 +49,7 @@ export default function Footer() {
 
   return (
     <motion.footer
-      className="bg-background border-t border-border/50"
+      className="bg-background border-t border-border/50 w-full mt-8 px-[8%] py-10 scroll-mt-20"
       initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8 }}
