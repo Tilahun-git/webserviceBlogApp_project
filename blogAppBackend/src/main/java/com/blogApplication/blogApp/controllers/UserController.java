@@ -1,10 +1,11 @@
 package com.blogApplication.blogApp.controllers;
 
 
-import com.blogApplication.blogApp.dto.userDto.RegisterRequestDto;
+import com.blogApplication.blogApp.dto.userDto.RegisterRequestDTO;
 import com.blogApplication.blogApp.dto.userDto.UserResponseDTO;
 import com.blogApplication.blogApp.dto.userDto.UserUpdateDTO;
 import com.blogApplication.blogApp.services.servicesImpl.UserServiceImpl;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,17 +13,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
+@RequiredArgsConstructor
 public class UserController {
     @Autowired
     private UserServiceImpl userService;
-
-    public UserController(UserServiceImpl userService) {
-        this.userService = userService;
-    }
 
 
     //  GET METHOD TO LIST ALL USERS
@@ -34,8 +31,8 @@ public class UserController {
 
     // POST METHOD TO ADD NEW USER
 
-    @PostMapping("user/addUser")
-    public ResponseEntity<UserResponseDTO> addUser(@RequestBody RegisterRequestDto userDto) {
+    @PostMapping("user/register")
+    public ResponseEntity<UserResponseDTO> addUser(@RequestBody RegisterRequestDTO userDto) {
         return new ResponseEntity<>(userService.createUser(userDto), HttpStatus.CREATED);
     }
 
