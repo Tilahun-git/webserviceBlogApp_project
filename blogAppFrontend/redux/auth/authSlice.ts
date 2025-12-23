@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface AuthState {
+  errorMessage: unknown;
   isAuthenticated: boolean;
   token: string | null;
   loading: boolean;
@@ -9,6 +10,7 @@ interface AuthState {
 
 const initialState: AuthState = {
   isAuthenticated: false,
+  errorMessage: null,
   token: null,
   loading: false,
   error: null,
