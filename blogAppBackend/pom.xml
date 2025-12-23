@@ -60,6 +60,19 @@
         </dependency>
 
 
+<!--        &lt;!&ndash; Spring Boot Starter Security &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-security</artifactId>-->
+<!--        </dependency>-->
+
+<!--        &lt;!&ndash; JWT support &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>io.jsonwebtoken</groupId>-->
+<!--            <artifactId>jjwt</artifactId>-->
+<!--            <version>0.9.1</version>-->
+<!--        </dependency>-->
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

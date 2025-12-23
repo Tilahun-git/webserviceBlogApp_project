@@ -1,7 +1,7 @@
 package com.blogApplication.blogApp.controllers;
 
 
-import com.blogApplication.blogApp.dto.auth.RegisterRequestDTO;
+import com.blogApplication.blogApp.dto.userDto.RegisterRequestDto;
 import com.blogApplication.blogApp.dto.userDto.UserResponseDTO;
 import com.blogApplication.blogApp.dto.userDto.UserUpdateDTO;
 import com.blogApplication.blogApp.services.servicesImpl.UserServiceImpl;
@@ -35,7 +35,7 @@ public class UserController {
     // POST METHOD TO ADD NEW USER
 
     @PostMapping("user/addUser")
-    public ResponseEntity<UserResponseDTO> addUser(@RequestBody RegisterRequestDTO userDto) {
+    public ResponseEntity<UserResponseDTO> addUser(@RequestBody RegisterRequestDto userDto) {
         return new ResponseEntity<>(userService.createUser(userDto), HttpStatus.CREATED);
     }
 

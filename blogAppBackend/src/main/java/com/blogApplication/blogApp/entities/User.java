@@ -47,8 +47,8 @@ public class User {
     @Column
     private LocalDateTime updatedAt;
 
-    @Column(name = "is_active", nullable = false )
-    private boolean isActive = false;
+//    @Column(name = "is_active", nullable = false )
+//    private boolean isActive = false;
 
     @ManyToMany(
             fetch = FetchType.EAGER,
