@@ -1,6 +1,5 @@
 package com.blogApplication.blogApp.auths;
 
-
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -14,7 +13,7 @@ import java.util.Date;
 public class JwtUtil {
 
     private final String SECRET_KEY = "mySecretKe25678934567898rertyf4567894567567567567y1234567890";
-    private final long EXPIRATION = 1000 * 60 * 60; // 1 hour
+    private final long EXPIRATION = 1000 * 60 * 60;
 
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
@@ -42,5 +41,3 @@ public class JwtUtil {
         return extractUsername(token).equals(userDetails.getUsername());
     }
 }
-
-

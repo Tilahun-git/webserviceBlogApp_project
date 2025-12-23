@@ -36,9 +36,6 @@ public class Post {
     private String imageName;
 
     @Column
-    private String imageName;
-
-    @Column
     private Long likeCount = 0L;
 
 

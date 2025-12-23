@@ -1,6 +1,5 @@
 package com.blogApplication.blogApp.services.servicesImpl;
 
-import com.blogApplication.blogApp.dto.categoryDto.CategoryDto;
 import com.blogApplication.blogApp.dto.postDto.PostDto;
 import com.blogApplication.blogApp.entities.Category;
 import com.blogApplication.blogApp.entities.Post;
@@ -12,6 +11,10 @@ import com.blogApplication.blogApp.repositories.UserRepo;
 import com.blogApplication.blogApp.services.servicesContract.PostServiceContract;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -34,12 +37,13 @@ public class PostServiceImpl implements PostServiceContract {
         if (posts.isEmpty()) {
             throw new ResourceNotFoundException("Post","There is no post found",null);
         }
-        return posts.stream().map(this::postToPostDto).collect(Collectors.toList());
+        return posts.stream().map(post -> modelMapper.map(post,PostDto.class))
+                .collect(Collectors.toList());
     }
     @Override
     public PostDto getPost(long id) {
         Post foundPost = postRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("Post","id",id));
-        return postToPostDto(foundPost);
+        return modelMapper.map(foundPost, PostDto.class);
     }
 
     @Override
@@ -53,12 +57,12 @@ public class PostServiceImpl implements PostServiceContract {
         Category category = categoryRepo.findById(categoryId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Category","id",categoryId));
-        Post postCreated = postDtoToPost(postDto);
+        Post postCreated = modelMapper.map(postDto, Post.class);
         postCreated.setAuthor(user);
         postCreated.setCategory(category);
         postCreated.setImageName("post.png");
         Post savedPost = postRepo.save(postCreated);
-        PostDto responseDto = postToPostDto(savedPost);
+        PostDto responseDto = modelMapper.map(savedPost, PostDto.class);
         responseDto.setAuthor(user.getUsername());
         responseDto.setAuthorId(savedPost.getAuthor().getId());
         responseDto.setCategoryId(savedPost.getCategory().getId());
@@ -68,66 +72,68 @@ public class PostServiceImpl implements PostServiceContract {
 
     @Override
     public PostDto updatePost(PostDto postDto, long id) {
-        Post existingPost = postRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("Post","id",id));
-        existingPost.setTitle(postDto.getTitle());
-        existingPost.setContent(postDto.getContent());
-        postRepo.save(existingPost);
-        return postToPostDto(existingPost);    }
+        Post existingPost = postRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
+
+        modelMapper.map(postDto, existingPost);
+        Post updatedPost = postRepo.save(existingPost);
+        return modelMapper.map(updatedPost, PostDto.class);
+    }
 
     @Override
     public PostDto deletePostById(long id) {
         Post deletedPost = postRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("Post","id",id));
         postRepo.delete(deletedPost);
-        return postToPostDto(deletedPost);
+        return modelMapper.map(deletedPost, PostDto.class);
     }
 
 
     // method to get all posts in authored by a certain user
-
     @Override
-    public List<PostDto> getAllPostsByUser(long id) {
+    public Page<PostDto> getPostsByUser(long userId, int pageNumber, int pageSize, Sort sort) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
-        User user = userRepo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User","id",id));
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
 
-        List<Post> posts = postRepo.getAllByAuthor(user);
+        Page<Post> PostsByUser = postRepo.findAllByAuthor(user,pageable);
 
-        return posts.stream()
-                .map(this::postToPostDto)
-                .collect(Collectors.toList());
+        return PostsByUser.map(post -> modelMapper.map(post, PostDto.class));
     }
 
     // method to get all posts in a certain category
-    @Override
-    public List<PostDto> getAllPostsByCategory(long id) {
-        Category category = categoryRepo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category","id",id));
 
-        List<Post> posts = postRepo.getAllByCategory(category);
+    public Page<PostDto> getPostsByCategory(long categoryId, int pageNumber, int pageSize, Sort sort) {
+        Category category = categoryRepo.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
 
-        return posts.stream()
-                .map(this::postToPostDto)
-                .collect(Collectors.toList());
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+
+        Page<Post> PostsByCat = postRepo.findAllByCategory(category, pageable);
+
+        return PostsByCat.map(post -> modelMapper.map(post,PostDto.class));
     }
 
     // method to search posts using keyword
+
     @Override
-    public List<PostDto> searchPosts(String keyword) {
-        return List.of();
-    }
+    public Page<PostDto> searchPosts(
+            String keyword,
+            int pageNumber,
+            int pageSize,
+            Sort sort
+    ) {
 
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
 
-    //convert post -> PostDto
-    private PostDto postToPostDto(Post post) {
+        Page<Post> searchedPosts = postRepo
+                .findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(
+                        keyword,
+                        keyword,
+                        pageable
+                );
 
-
-        return modelMapper.map(post, PostDto.class);
-    }
-
-    //convert PostDto -> Post
-
-    private Post postDtoToPost(PostDto postDto) {
-        return modelMapper.map(postDto, Post.class);
+        return searchedPosts.map(post -> modelMapper.map(post, PostDto.class));
     }
 
 

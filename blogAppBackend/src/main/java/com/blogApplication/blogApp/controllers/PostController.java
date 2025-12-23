@@ -1,9 +1,11 @@
 package com.blogApplication.blogApp.controllers;
 
 import com.blogApplication.blogApp.dto.postDto.PostDto;
-import com.blogApplication.blogApp.entities.Post;
 import com.blogApplication.blogApp.services.servicesImpl.PostServiceImpl;
+import com.blogApplication.blogApp.services.servicesImpl.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,10 +18,12 @@ public class PostController {
 
     @Autowired
     private PostServiceImpl postService;
+    @Autowired
+    private UserServiceImpl userServiceImpl;
 
     // GET METHOD TO RETRIEVE ALL POSTS
 
-    @GetMapping("/posts")
+    @GetMapping("/public")
     public ResponseEntity <List<PostDto>> getAllPosts() {
         List<PostDto> postsDto = postService.getAllPosts();
 
@@ -28,23 +32,87 @@ public class PostController {
 
     //GET METHOD TO RETIEVE SINGLE POST
 
-    @GetMapping("post/{id}")
+    @GetMapping("post/public/{id}")
     public ResponseEntity<PostDto> getPostById(@PathVariable long id) {
         return  ResponseEntity.ok( postService.getPost(id));
     }
 
     //POST METHOD TO ADD POST
 
-    @PostMapping("/post/addPost")
-    public ResponseEntity<PostDto> addPost(@RequestBody PostDto postDto) {
-        return new ResponseEntity<PostDto>(postService.createPost(postDto), HttpStatus.CREATED);
+    @PostMapping("/user/userId/category/categoryId/posts")
+    public ResponseEntity<PostDto> addPost(@RequestBody PostDto postDto,@PathVariable long userId,@PathVariable long categoryId) {
+        return new ResponseEntity<PostDto>(postService.createPost(postDto,userId,categoryId), HttpStatus.CREATED);
     }
 
     //PUT METHOD TO UPDATE THE EXISTING POST
 
-    @PutMapping("post/{id}")
+    @PutMapping("post/user/{id}")
     public ResponseEntity<String> updatePost(@PathVariable long id, @RequestBody PostDto postDto) {
-        postService.updatePost(id, postDto);
+        postService.updatePost(postDto,id);
         return ResponseEntity.ok("Post updated successfully");
+    }
+
+    //DELETE METHOD TO DELETE SINGLE POST
+
+    @DeleteMapping("/post/user/{id}")
+    public ResponseEntity<?> deletePost(@PathVariable long id) {
+         postService.deletePostById(id);
+        return ResponseEntity.ok("User deleted successfully");
+    }
+
+
+    // GET METHOD TO FIND POSTS BY SPECIFIC USER
+
+    @GetMapping("/public/user/{userId}/posts")
+    public ResponseEntity<Page<PostDto>> getPostsByUser(
+            @PathVariable("userId") long userId,
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
+    ) {
+
+        Sort sort = sortDir.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Page<PostDto> postsByUser = postService.getPostsByUser(userId, pageNumber, pageSize, sort);
+        return ResponseEntity.ok(postsByUser);
+    }
+
+    // GET METHOD TO FIND POSTS BY SPECIFIC CATEGORY
+
+    @GetMapping("/public/category/{categoryId}/posts")
+
+    public ResponseEntity<Page<PostDto>> getPostsByCategory(
+            @PathVariable("categoryId") long categoryId,
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
+    ) {
+        Sort sort = sortDir.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Page<PostDto> postsByCategory = postService.getPostsByCategory(categoryId, pageNumber, pageSize, sort);
+        return ResponseEntity.ok(postsByCategory);
+    }
+
+    // GET METHOD TO GET POSTS USING SEARCH QUERY
+
+    @GetMapping("/public/search")
+    public ResponseEntity<Page<PostDto>> searchPosts(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
+    ) {
+
+        Sort sort = sortDir.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                :Sort.by(sortBy).descending();
+        Page<PostDto> posts = postService.searchPosts(keyword, pageNumber, pageSize, sort);
+
+        return ResponseEntity.ok(posts);
     }
 }
