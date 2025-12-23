@@ -70,9 +70,11 @@ export default function BlogPage() {
     );
 
   return (
-    <div className="min-h-screen transition-colors duration-300 bg-gray-50 dark:bg-neutral-900 py-20">
+    <div className="min-h-screen  transition-colors duration-300 bg-gray-50 dark:bg-neutral-900
+     py-20 px-4 sm:px-6 lg:px-8 mb-20">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-6 text-gray-900 dark:text-white">
+        <div className='flex justify-between items-center gap-10'>
+        <h1 className="text-3xl font-bold  mb-6 mr-0 text-gray-900 dark:text-white">
           Blog Posts
         </h1>
 
@@ -100,6 +102,7 @@ export default function BlogPage() {
               <SelectItem value="asc">Oldest First</SelectItem>
             </SelectContent>
           </Select>
+        </div>
         </div>
 
         {/* Posts Grid */}
