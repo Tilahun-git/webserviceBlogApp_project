@@ -1,4 +1,4 @@
-package com.blogApplication.blogApp.dto.auth;
+package com.blogApplication.blogApp.dto.userDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,10 +9,8 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginRequestDTO {
-
-    private String username;
-    private String password;
-    private String email;
+public class LoginRequestDto {
+        private String username;
+        private String password;
 
 }

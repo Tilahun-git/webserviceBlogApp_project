@@ -1,6 +1,10 @@
 package com.blogApplication.blogApp.dto.postDto;
 
 
+import com.blogApplication.blogApp.dto.categoryDto.CategoryDto;
+import com.blogApplication.blogApp.dto.userDto.UserResponseDTO;
+import com.blogApplication.blogApp.entities.Category;
+import com.blogApplication.blogApp.entities.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,7 +19,9 @@ public class PostDto {
     private long id;
     private String title;
     private String content;
+    private String imageName = "default.png";
     private String author;
+    private long authorId;
     private long categoryId;
 
 }

@@ -1,7 +1,6 @@
 package com.blogApplication.blogApp.services.servicesImpl;
 
-import com.blogApplication.blogApp.config.ModelMapperConfig;
-import com.blogApplication.blogApp.dto.auth.RegisterRequestDTO;
+import com.blogApplication.blogApp.dto.userDto.RegisterRequestDTO;
 import com.blogApplication.blogApp.dto.userDto.UserResponseDTO;
 import com.blogApplication.blogApp.dto.userDto.UserUpdateDTO;
 import com.blogApplication.blogApp.entities.User;
@@ -9,14 +8,15 @@ import com.blogApplication.blogApp.exceptions.ResourceNotFoundException;
 import com.blogApplication.blogApp.repositories.UserRepo;
 import com.blogApplication.blogApp.services.servicesContract.UserServiceContract;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +29,8 @@ public class UserServiceImpl implements UserServiceContract {
 
     @Autowired
     private UserRepo userRepo;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public UserResponseDTO getUser(Long id) {
@@ -51,6 +53,7 @@ public class UserServiceImpl implements UserServiceContract {
 
     @Override
     public UserResponseDTO createUser(RegisterRequestDTO userDto) {
+
         User createdUser = userRepo.save(RegisterRequestDTOToUser(userDto));
 
         UserResponseDTO createdUserDto = userToUserResponseDTO(createdUser);
@@ -79,6 +82,7 @@ public class UserServiceImpl implements UserServiceContract {
 
     }
 
+
     // convert user -> dto
     public  UserResponseDTO userToUserResponseDTO(User user) {
         return  modelMapper.map(user, UserResponseDTO.class);
@@ -86,7 +90,11 @@ public class UserServiceImpl implements UserServiceContract {
 
     // convert dto -> user
     public  User RegisterRequestDTOToUser(RegisterRequestDTO dto) {
-        return  modelMapper.map(dto, User.class);
+
+        User user = modelMapper.map(dto, User.class);
+
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        return  user;
     }
 
     public  User userUpdateDTOToUser(UserUpdateDTO userDto, User existingUser)

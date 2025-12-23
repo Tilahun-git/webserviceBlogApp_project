@@ -21,15 +21,9 @@ public class Category {
     @Column(name = "category_id")
     private long id;
 
-    @Column(name = "category_name")
-    private String categoryName;
-
-    @Column(name = "category_description")
-    private String categoryDescription;
-
-    @Column
+    @Column(nullable = false)
     private String title;
 
-    @OneToMany(mappedBy = "category")
+    @OneToMany(mappedBy = "category",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     private Set<Post> posts = new HashSet<>();
 }

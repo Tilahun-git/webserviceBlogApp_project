@@ -32,6 +32,9 @@ public class Post {
     private String content;
 
     @Column
+    private String imageName;
+
+    @Column
     private Long likeCount = 0L;
 
     @CreationTimestamp

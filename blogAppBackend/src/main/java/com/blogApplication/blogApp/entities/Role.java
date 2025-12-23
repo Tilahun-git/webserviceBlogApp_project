@@ -21,11 +21,7 @@ public class Role {
     @Column(name = "role_id")
     private Long id;
 
-    @Column(name = "role_name")
-    private String roleName;
-
-    @Column(name = "role_description")
-    private String roleDescription;
+    private String name;
 
     @ManyToMany(mappedBy = "roles")
     private Set<User> users = new HashSet<>();
