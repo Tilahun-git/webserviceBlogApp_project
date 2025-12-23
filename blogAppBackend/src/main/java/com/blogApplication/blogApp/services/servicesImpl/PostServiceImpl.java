@@ -2,7 +2,6 @@ package com.blogApplication.blogApp.services.servicesImpl;
 
 import com.blogApplication.blogApp.dto.categoryDto.CategoryDto;
 import com.blogApplication.blogApp.dto.postDto.PostDto;
-import com.blogApplication.blogApp.dto.userDto.UserDto;
 import com.blogApplication.blogApp.entities.Category;
 import com.blogApplication.blogApp.entities.Post;
 import com.blogApplication.blogApp.entities.User;
@@ -60,6 +59,7 @@ public class PostServiceImpl implements PostServiceContract {
         postCreated.setImageName("post.png");
         Post savedPost = postRepo.save(postCreated);
         PostDto responseDto = postToPostDto(savedPost);
+        responseDto.setAuthor(user.getUsername());
         responseDto.setAuthorId(savedPost.getAuthor().getId());
         responseDto.setCategoryId(savedPost.getCategory().getId());
         return responseDto;

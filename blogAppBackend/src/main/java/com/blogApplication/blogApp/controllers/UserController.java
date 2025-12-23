@@ -1,8 +1,11 @@
 package com.blogApplication.blogApp.controllers;
 
 
-import com.blogApplication.blogApp.dto.userDto.UserDto;
+import com.blogApplication.blogApp.dto.userDto.RegisterRequestDTO;
+import com.blogApplication.blogApp.dto.userDto.UserResponseDTO;
+import com.blogApplication.blogApp.dto.userDto.UserUpdateDTO;
 import com.blogApplication.blogApp.services.servicesImpl.UserServiceImpl;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,44 +16,37 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
+@RequiredArgsConstructor
 public class UserController {
     @Autowired
     private UserServiceImpl userService;
-
-    public UserController(UserServiceImpl userService) {
-        this.userService = userService;
-    }
 
 
     //  GET METHOD TO LIST ALL USERS
 
     @GetMapping("/user-list")
-    public ResponseEntity <List<UserDto>> getAllUsers() {
-
+    public ResponseEntity <List<UserResponseDTO>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
     // POST METHOD TO ADD NEW USER
 
-    @PostMapping("user/addUser")
-    public ResponseEntity<UserDto> addUser(@RequestBody UserDto userDto) {
-
-
+    @PostMapping("user/register")
+    public ResponseEntity<UserResponseDTO> addUser(@RequestBody RegisterRequestDTO userDto) {
         return new ResponseEntity<>(userService.createUser(userDto), HttpStatus.CREATED);
     }
 
     // GET METHOD TO GET SINGLE USER
 
     @GetMapping("/user/{id}")
-    public ResponseEntity<UserDto> getUser(@PathVariable long id) {
-
+    public ResponseEntity<UserResponseDTO> getUser(@PathVariable Long id) {
         return  ResponseEntity.ok(userService.getUser(id));
     }
     //PUT METHOD TO UPDATE EXISTING USER
 
     @PutMapping("/user/{id}")
-    public ResponseEntity<UserDto> updateUser(@RequestBody UserDto userDto, @PathVariable long id) {
-        UserDto updatedUser = userService.updateUser(userDto, id);
+    public ResponseEntity<UserResponseDTO> updateUser(@RequestBody UserUpdateDTO userDto, @PathVariable Long id) {
+        UserResponseDTO updatedUser = userService.updateUser(userDto, id);
         return ResponseEntity.ok(updatedUser);
 
     }
@@ -60,7 +56,7 @@ public class UserController {
 
     @DeleteMapping("/user/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        UserDto deletedUser = userService.deleteUser(id);
-        return ResponseEntity.ok("User deleted successfully");
+        UserResponseDTO deletedUser = userService.deleteUser(id);
+        return ResponseEntity.ok(Map.of("message", "User deleted successfully", "data", deletedUser));
     }
 }

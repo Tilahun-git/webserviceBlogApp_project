@@ -3,6 +3,8 @@ package com.blogApplication.blogApp.controllers;
 
 import com.blogApplication.blogApp.dto.categoryDto.CategoryDto;
 import com.blogApplication.blogApp.services.servicesImpl.CategoryServiceImpl;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,12 +13,11 @@ import java.util.List;
 import java.util.Map;
 @RestController
 @RequestMapping("/api/categories")
+@RequiredArgsConstructor
 public class CategoryController {
-    private final CategoryServiceImpl categoryServiceImpl;
-    public CategoryController(CategoryServiceImpl categoryServiceImpl) {
-        this.categoryServiceImpl = categoryServiceImpl;
-    }
 
+    @Autowired
+    private final CategoryServiceImpl categoryServiceImpl;
 
     // GET TO RETRIEVE ALL CATEGORIES
     @GetMapping("/categories-list")

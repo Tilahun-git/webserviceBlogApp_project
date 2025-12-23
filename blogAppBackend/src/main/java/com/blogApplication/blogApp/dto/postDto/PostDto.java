@@ -2,7 +2,7 @@ package com.blogApplication.blogApp.dto.postDto;
 
 
 import com.blogApplication.blogApp.dto.categoryDto.CategoryDto;
-import com.blogApplication.blogApp.dto.userDto.UserDto;
+import com.blogApplication.blogApp.dto.userDto.UserResponseDTO;
 import com.blogApplication.blogApp.entities.Category;
 import com.blogApplication.blogApp.entities.User;
 import lombok.AllArgsConstructor;
