@@ -10,16 +10,14 @@ import { useRouter } from 'next/navigation';
 import { ChangeEvent, FormEvent, useState } from 'react';
 
 type FormDataType = {
-  firstName: string;
-  lastName: string;
+ username? : string;
   email: string;
   password: string;
 };
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState<FormDataType>({
-    firstName: '',
-    lastName: '',
+    username: '',
     email: '',
     password: '',
   });
@@ -36,7 +34,7 @@ export default function SignUpPage() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
+    if (!formData.username || !formData.email || !formData.password) {
       setErrorMessage('Please fill out all fields.');
       return;
     }
@@ -85,30 +83,20 @@ export default function SignUpPage() {
         </h1>
 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-          <div>
-            <Label htmlFor="firstName">First Name</Label>
+
+          <div className='grid gap-2'>
+            <Label htmlFor="username">Username:</Label>
             <Input
-              id="firstName"
+              id="username"
               type="text"
-              placeholder="frist name"
-              value={formData.firstName}
+              placeholder="username"
+              value={formData.username}
               onChange={handleChange}
             />
           </div>
 
-          <div>
-            <Label htmlFor="lastName">Last Name</Label>
-            <Input
-              id="lastName"
-              type="text"
-              placeholder="last name"
-              value={formData.lastName}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="email">Email</Label>
+          <div className='grid gap-2'>
+            <Label htmlFor="email">Email:</Label>
             <Input
               id="email"
               type="email"
@@ -118,8 +106,8 @@ export default function SignUpPage() {
             />
           </div>
 
-          <div>
-            <Label htmlFor="password">Password</Label>
+          <div className='grid gap-2'>
+            <Label htmlFor="password">Password:</Label>
             <Input
               id="password"
               type="password"

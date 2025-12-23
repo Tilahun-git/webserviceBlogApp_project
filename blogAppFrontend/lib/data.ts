@@ -1,43 +1,73 @@
 export const featuredPosts = [
   {
-    id: "1",
-    title: "The Art of Minimalist Design",
+    id: 1,
+    slug: "nextjs-app-router-guide",
+    title: "The Complete Guide to Next.js App Router",
     excerpt:
-      "Exploring how less can truly be more in the digital age, and why constraints breed creativity.",
-    category: "Design",
-    date: "Dec 15, 2024",
-    image:
-      "https://images.pexels.com/photos/196644/pexels-photo-196644.jpeg?auto=compress&cs=tinysrgb&w=600",
-  },
-  {
-    id: 2,
-    title: "Building Sustainable Tech Solutions",
-    excerpt:
-      "A deep dive into creating technology that doesn't just work, but works responsibly for future generations.",
-    category: "Tech",
-    date: "Dec 12, 2024",
-    image:
-      "https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg?auto=compress&cs=tinysrgb&w=600",
-  },
-  {
-    id: 3,
-    title: "The Psychology of Creative Flow",
-    excerpt:
-      "Understanding the mental states that unlock our most innovative thinking and productive creativity.",
-    category: "Creativity",
-    date: "Dec 10, 2024",
+      "Learn how the App Router works in Next.js and how to structure modern React applications.",
+    author: "Tibebu Dereje",
+    date: "Aug 12, 2025",
+    readingTime: "6 min read",
+    tags: ["Next.js", "React", "Frontend"],
+    categories: ["Web Development", "Frontend"],
     image:
       "https://images.pexels.com/photos/1181248/pexels-photo-1181248.jpeg?auto=compress&cs=tinysrgb&w=600",
   },
   {
-    id: 4,
-    title: "Future of Remote Collaboration",
+    id: 2,
+    slug: "tailwind-best-practices",
+    title: "Tailwind CSS Best Practices for Clean UI",
     excerpt:
-      "How distributed teams are reshaping the way we work, communicate, and create together.",
-    category: "Tech",
-    date: "Dec 8, 2024",
+      "How to write maintainable, scalable Tailwind CSS in real-world projects.",
+    author: "Tibebu Dereje",
+    date: "Aug 10, 2025",
+    readingTime: "5 min read",
+    tags: ["Tailwind", "CSS", "UI"],
+    categories: ["UI/UX", "Frontend"],
     image:
-      "https://images.pexels.com/photos/1181406/pexels-photo-1181406.jpeg?auto=compress&cs=tinysrgb&w=600",
+      "https://images.pexels.com/photos/1181263/pexels-photo-1181263.jpeg?auto=compress&cs=tinysrgb&w=600",
+  },
+  {
+    id: 3,
+    slug: "framer-motion-ui",
+    title: "Professional UI Animations with Framer Motion",
+    excerpt:
+      "Create smooth and meaningful animations that improve UX without distraction.",
+    author: "Tibebu Dereje",
+    date: "Aug 8, 2025",
+    readingTime: "7 min read",
+    tags: ["Animation", "Framer Motion"],
+    categories: ["UI/UX", "Animation"],
+    image:
+      "https://images.pexels.com/photos/1181354/pexels-photo-1181354.jpeg?auto=compress&cs=tinysrgb&w=600",
+  },
+  {
+    id: 4,
+    slug: "react-query-guide",
+    title: "Mastering Data Fetching with React Query",
+    excerpt:
+      "Learn how React Query simplifies fetching, caching, and updating server state in React apps.",
+    author: "Tibebu Dereje",
+    date: "Aug 5, 2025",
+    readingTime: "8 min read",
+    tags: ["React Query", "Data Fetching", "React"],
+    categories: ["Frontend", "Web Development"],
+    image:
+      "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=600",
+  },
+  {
+    id: 5,
+    slug: "nextjs-ssr-vs-isr",
+    title: "Next.js SSR vs ISR: Choosing the Right Rendering Strategy",
+    excerpt:
+      "Understand the differences between Server-Side Rendering and Incremental Static Regeneration in Next.js.",
+    author: "Tibebu Dereje",
+    date: "Aug 3, 2025",
+    readingTime: "6 min read",
+    tags: ["Next.js", "SSR", "ISR"],
+    categories: ["Web Development", "Frontend"],
+    image:
+      "https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=600",
   },
 ];
 
