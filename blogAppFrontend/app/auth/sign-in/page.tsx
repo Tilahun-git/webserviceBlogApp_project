@@ -1,13 +1,16 @@
-'use client';
+"use client";
 
-import { Alert } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { ChangeEvent, FormEvent, useState } from 'react';
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { signInStart, signInSuccess, signInFailure } from "@/redux/auth/authSlice";
+import { ChangeEvent, FormEvent, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 type FormDataType = {
   email: string;
@@ -16,13 +19,15 @@ type FormDataType = {
 
 export default function SignInPage() {
   const [formData, setFormData] = useState<FormDataType>({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
 
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const dispatch = useDispatch();
   const router = useRouter();
+
+  const loading = useSelector((state: RootState) => state.auth.loading);
+  const errorMessage = useSelector((state: RootState) => state.auth.errorMessage) as string | null;
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -31,48 +36,46 @@ export default function SignInPage() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     if (!formData.email || !formData.password) {
-      setErrorMessage('Please fill out all fields.');
+      dispatch(signInFailure("Please fill out all fields."));
       return;
     }
 
     try {
-      setLoading(true);
-      setErrorMessage(null);
+      dispatch(signInStart());
 
-      const res = await fetch('/api/auth/signin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/auth/sign-in", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
       const data = await res.json();
 
-      if (!res.ok) {
-        setLoading(false);
-        setErrorMessage(data.message || 'Sign in failed');
+      if (!res.ok || data.success === false) {
+        dispatch(signInFailure(data.message || "Sign in failed"));
         return;
       }
 
-      setLoading(false);
-      router.push('/'); // Redirect to homepage
+      dispatch(signInSuccess(data.user)); 
+      router.push("/");
     } catch (error) {
-      setLoading(false);
-      setErrorMessage(error instanceof Error ? error.message : 'Something went wrong');
+      dispatch(
+        signInFailure(error instanceof Error ? error.message : "Something went wrong")
+      );
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-20">
       <div className="flex flex-col md:flex-row max-w-4xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden p-12">
-        
         {/* LEFT INFO SECTION */}
         <div className="hidden md:flex flex-1 bg-linear-to-br from-indigo-800 via-white-700 to-gray-500 items-center justify-center text-white p-10">
           <div className="text-center">
             <h1 className="text-3xl font-bold mb-4">Welcome Back!</h1>
             <p className="text-sm">
-              Sign in to continue and access your dashboard, manage your profile,
-              and enjoy personalized content.
+              Sign in to continue and access your dashboard, manage your profile, and enjoy personalized content.
             </p>
           </div>
         </div>
@@ -84,8 +87,8 @@ export default function SignInPage() {
           </h2>
 
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-            <div>
-              <Label htmlFor="email">Email</Label>
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email:</Label>
               <Input
                 id="email"
                 type="email"
@@ -95,8 +98,8 @@ export default function SignInPage() {
               />
             </div>
 
-            <div>
-              <Label htmlFor="password">Password</Label>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Password:</Label>
               <Input
                 id="password"
                 type="password"
@@ -113,14 +116,17 @@ export default function SignInPage() {
                   <span className="pl-3">Loading...</span>
                 </>
               ) : (
-                'Sign In'
+                "Sign In"
               )}
             </Button>
           </form>
 
           <div className="text-center text-sm mt-4">
             <span>Don&apos;t have an account? </span>
-            <Link href="/auth/sign-up" className="text-blue-500 font-medium hover:underline">
+            <Link
+              href="/auth/sign-up"
+              className="text-blue-500 font-medium hover:underline"
+            >
               Sign Up
             </Link>
           </div>
