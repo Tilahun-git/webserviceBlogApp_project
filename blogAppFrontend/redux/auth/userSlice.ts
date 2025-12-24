@@ -8,12 +8,14 @@ interface UserProfile {
 }
 
 interface UserState {
+  currentUser: unknown;
   profile: UserProfile | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: UserState = {
+  currentUser: null,
   profile: null,
   loading: false,
   error: null,
