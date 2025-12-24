@@ -16,7 +16,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,7 +49,7 @@ public class PostServiceImpl implements PostServiceContract {
     }
 
     @Override
-    public PostDto createPost(PostDto postDto,long authorId, long categoryId) {
+    public PostDto createPost(PostDto postDto, MultipartFile imageFile , long authorId, long categoryId) throws IOException {
 
 
         User user = userRepo.findById(authorId)
@@ -60,9 +62,13 @@ public class PostServiceImpl implements PostServiceContract {
         Post postCreated = modelMapper.map(postDto, Post.class);
         postCreated.setAuthor(user);
         postCreated.setCategory(category);
-        postCreated.setImageName("post.png");
+        postCreated.setImageName(imageFile.getOriginalFilename());
+        postCreated.setImageType(imageFile.getContentType());
+        postCreated.setImageData(imageFile.getBytes());
+
         Post savedPost = postRepo.save(postCreated);
         PostDto responseDto = modelMapper.map(savedPost, PostDto.class);
+
         responseDto.setAuthor(user.getUsername());
         responseDto.setAuthorId(savedPost.getAuthor().getId());
         responseDto.setCategoryId(savedPost.getCategory().getId());
