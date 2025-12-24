@@ -10,13 +10,17 @@ import { useRouter } from 'next/navigation';
 import { ChangeEvent, FormEvent, useState } from 'react';
 
 type FormDataType = {
- username? : string;
+  firstname? : string;
+  lastname?: string;
+  username? : string;
   email: string;
   password: string;
 };
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState<FormDataType>({
+    firstname: '',
+    lastname: '',
     username: '',
     email: '',
     password: '',
@@ -84,6 +88,35 @@ export default function SignUpPage() {
 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
 
+          <div className='grid gap-2'>
+            <Label htmlFor="firstname">First Name:</Label>
+            <Input
+              id="firstname"
+              type="text"
+              placeholder="First Name"
+              value={formData.firstname}
+              onChange={handleChange}/>
+          </div>
+          <div className='grid gap-2'>
+            <Label htmlFor="lastname">Last Name:</Label>
+            <Input
+              id="lastname"
+              type="text"
+              placeholder="Last Name"
+              value={formData.lastname}
+              onChange={handleChange}
+            />
+          </div>
+          <div className='grid gap-2'>
+            <Label htmlFor="username">Username:</Label>
+            <Input
+              id="username"
+              type="text"
+              placeholder="username"
+              value={formData.username}
+              onChange={handleChange}
+            />
+          </div>
           <div className='grid gap-2'>
             <Label htmlFor="username">Username:</Label>
             <Input
