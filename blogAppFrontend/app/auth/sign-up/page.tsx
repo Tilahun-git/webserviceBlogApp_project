@@ -117,16 +117,6 @@ export default function SignUpPage() {
               onChange={handleChange}
             />
           </div>
-          <div className='grid gap-2'>
-            <Label htmlFor="username">Username:</Label>
-            <Input
-              id="username"
-              type="text"
-              placeholder="username"
-              value={formData.username}
-              onChange={handleChange}
-            />
-          </div>
 
           <div className='grid gap-2'>
             <Label htmlFor="email">Email:</Label>
