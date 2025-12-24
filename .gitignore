@@ -22,6 +22,7 @@ logs/
 ############################
 .env
 .env.*
+env.local
 application.properties
 application.yml
 application-*.properties
@@ -30,18 +31,18 @@ application-*.yml
 ############################
 # Backend (Spring Boot / Java)
 ############################
-/backend/target/
-/backend/build/
-/backend/out/
-/backend/.gradle/
-/backend/coverage/
-/backend/jacoco/
-.backend/.classpath
-/backend/.project
-/backend/.settings/
+/blogAppBackend/target/
+/blogAppBackend/build/
+/blogAppBackend/out/
+/blogAppBackend/.gradle/
+/blogAppBackend/coverage/
+/blogAppBackend/jacoco/
+/blogAppBackend/.classpath
+/blogAppBackend/.project
+/blogAppBackend/.settings/
 
 ############################
-# Frontend (Node / Next.js)
+# Frontend (Next.js / Node)
 ############################
 /blogAppFrontend/node_modules/
 /blogAppFrontend/.pnp
@@ -56,6 +57,14 @@ application-*.yml
 /blogAppFrontend/out/
 /blogAppFrontend/build/
 /blogAppFrontend/coverage/
+/blogAppFrontend/.vercel
+/blogAppFrontend/.turbo
+/blogAppFrontend/.cache
+
+# Frontend env files
+/blogAppFrontend/.env
+/blogAppFrontend/.env.local
+/blogAppFrontend/env.local
 
 ############################
 # Debug
@@ -66,12 +75,14 @@ yarn-error.log*
 .pnpm-debug.log*
 
 ############################
-# Vercel
-############################
-/blogAppFrontend/.vercel
-
-############################
 # TypeScript
 ############################
 *.tsbuildinfo
 /blogAppFrontend/next-env.d.ts
+
+############################
+# Root Node (ignore ONLY if root is not Node project)
+############################
+/node_modules/
+/package-lock.json
+/package.json
