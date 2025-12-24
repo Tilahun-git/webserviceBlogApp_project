@@ -7,9 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -39,9 +42,9 @@ public class PostController {
 
     //POST METHOD TO ADD POST
 
-    @PostMapping("/user/userId/category/categoryId/posts")
-    public ResponseEntity<PostDto> addPost(@RequestBody PostDto postDto,@PathVariable long userId,@PathVariable long categoryId) {
-        return new ResponseEntity<PostDto>(postService.createPost(postDto,userId,categoryId), HttpStatus.CREATED);
+    @PostMapping("/user/{userId}/category/{categoryId}/posts")
+    public ResponseEntity<PostDto> addPost(@RequestPart PostDto postDto, @RequestPart MultipartFile imageFile ,@PathVariable long userId, @PathVariable long categoryId) throws IOException {
+        return new ResponseEntity<PostDto>(postService.createPost(postDto,imageFile,userId,categoryId), HttpStatus.CREATED);
     }
 
     //PUT METHOD TO UPDATE THE EXISTING POST
@@ -114,5 +117,15 @@ public class PostController {
         Page<PostDto> posts = postService.searchPosts(keyword, pageNumber, pageSize, sort);
 
         return ResponseEntity.ok(posts);
+    }
+
+    @GetMapping("/post/{postId}/image")
+    public ResponseEntity<byte[]> getPostImage(@PathVariable long postId) throws IOException {
+        PostDto postDto = postService.getPost(postId);
+
+        byte[] imageFile = postDto.getImageData();
+        return ResponseEntity.ok()
+                .contentType(MediaType.valueOf(postDto.getImageType()))
+                .body(imageFile);
     }
 }
