@@ -18,6 +18,8 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
+
+@CrossOrigin(origins = "http://localhost:3000") // allow frontend
 @RequiredArgsConstructor
 public class UserController {
     @Autowired

@@ -34,11 +34,9 @@ public class AuthController {
                     )
             );
 
-//            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
             String token = jwtUtil.generateToken(request.getUsername());
 
-//            return ResponseEntity.ok(token);
             return ResponseEntity.ok(new LoginResponseDto(token));
         } catch (Exception ex) {
             return ResponseEntity.status(401).body(Map.of("error", "Invalid username or password"));
