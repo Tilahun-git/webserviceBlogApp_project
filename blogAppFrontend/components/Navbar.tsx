@@ -63,7 +63,7 @@ export default function Navigation() {
                 {item.name}
               </Link>
             ))}
-            <Link href="/">
+            <Link href="/admin">
               <Button size="sm" variant="outline">
                 Dashboard
               </Button>
