@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -8,16 +8,26 @@ import { Spinner } from '@/components/ui/spinner';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ChangeEvent, FormEvent, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { signUpUser } from '@/redux/auth/authSlice';
+import type { RootState, AppDispatch } from '@/redux/store';
 
 type FormDataType = {
-  firstname? : string;
-  lastname?: string;
-  username? : string;
+  firstname: string;
+  lastname: string;
+  username: string;
   email: string;
   password: string;
 };
 
 export default function SignUpPage() {
+  const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+
+  const { loading, error } = useSelector(
+    (state: RootState) => state.auth
+  );
+
   const [formData, setFormData] = useState<FormDataType>({
     firstname: '',
     lastname: '',
@@ -25,10 +35,6 @@ export default function SignUpPage() {
     email: '',
     password: '',
   });
-
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const router = useRouter();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -38,34 +44,15 @@ export default function SignUpPage() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!formData.username || !formData.email || !formData.password) {
-      setErrorMessage('Please fill out all fields.');
+    if ( !formData.firstname || !formData.lastname || !formData.username || !formData.email || !formData.password) {
+       alert('Please fill all fields.');
       return;
     }
 
-    try {
-      setLoading(true);
-      setErrorMessage(null);
-
-      const res = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setLoading(false);
-        setErrorMessage(data.message || 'Signup failed');
-        return;
-      }
-
-      setLoading(false);
+    const result = await dispatch(signUpUser(formData));
+;
+    if (signUpUser.fulfilled.match(result)) {
       router.push('/auth/sign-in');
-    } catch (error) {
-      setLoading(false);
-      setErrorMessage(error instanceof Error ? error.message : 'Something went wrong');
     }
   };
 
@@ -140,15 +127,8 @@ export default function SignUpPage() {
             />
           </div>
 
-          <Button type="submit" disabled={loading} className="mt-2 w-full">
-            {loading ? (
-              <>
-                <Spinner />
-                <span className="pl-3">Loading...</span>
-              </>
-            ) : (
-              'Sign Up'
-            )}
+          <Button type="submit" disabled={loading}>
+            {loading ? <Spinner /> : 'Sign Up'}
           </Button>
         </form>
 
@@ -159,11 +139,7 @@ export default function SignUpPage() {
           </Link>
         </div>
 
-        {errorMessage && (
-          <Alert className="mt-4" color="failure">
-            {errorMessage}
-          </Alert>
-        )}
+       {error && <Alert className="mt-4">{error}</Alert>}
         </div>
       </div>
     </div>
