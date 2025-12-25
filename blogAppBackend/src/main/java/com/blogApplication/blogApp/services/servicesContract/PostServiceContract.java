@@ -4,7 +4,9 @@ import com.blogApplication.blogApp.dto.postDto.PostDto;
 import com.blogApplication.blogApp.dto.postDto.PostResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface PostServiceContract {
@@ -12,6 +14,10 @@ public interface PostServiceContract {
 
      Page<PostResponseDto> getAllPosts(int pageNumber, int pageSize, Sort sort, String search);
 
+<<<<<<< HEAD
+=======
+    PostDto createPost(PostDto postDto, MultipartFile imageFile , long authorId, long categoryId) throws IOException;
+>>>>>>> 63b3f89d0670f7ea70228f7da9cf3e1345ccfcf1
 
         PostResponseDto getPost(long id);
 

@@ -158,7 +158,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -217,11 +219,16 @@ public class PostServiceImpl implements PostServiceContract {
     }
 
     @Override
+<<<<<<< HEAD
     public PostResponseDto getPost(long id) {
         Post foundPost = postRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
         return mapToResponseDto(foundPost);
     }
+=======
+    public PostDto createPost(PostDto postDto, MultipartFile imageFile , long authorId, long categoryId) throws IOException {
+
+>>>>>>> 63b3f89d0670f7ea70228f7da9cf3e1345ccfcf1
 
     @Override
     public PostResponseDto createPost(PostDto postDto, long authorId, long categoryId) {
@@ -229,7 +236,26 @@ public class PostServiceImpl implements PostServiceContract {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", authorId));
 
         Category category = categoryRepo.findById(categoryId)
+<<<<<<< HEAD
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
+=======
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Category","id",categoryId));
+        Post postCreated = modelMapper.map(postDto, Post.class);
+        postCreated.setAuthor(user);
+        postCreated.setCategory(category);
+        postCreated.setImageName(imageFile.getOriginalFilename());
+        postCreated.setImageType(imageFile.getContentType());
+        postCreated.setImageData(imageFile.getBytes());
+
+        Post savedPost = postRepo.save(postCreated);
+        PostDto responseDto = modelMapper.map(savedPost, PostDto.class);
+
+        responseDto.setAuthor(user.getUsername());
+        responseDto.setAuthorId(savedPost.getAuthor().getId());
+        responseDto.setCategoryId(savedPost.getCategory().getId());
+        return responseDto;
+>>>>>>> 63b3f89d0670f7ea70228f7da9cf3e1345ccfcf1
 
         Post post = modelMapper.map(postDto, Post.class);
         post.setAuthor(user);
