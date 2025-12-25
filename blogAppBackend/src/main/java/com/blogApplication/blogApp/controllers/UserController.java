@@ -9,8 +9,11 @@ import java.util.List;
 
 @RestController
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 @RequestMapping("/api/users")
 =======
+=======
+>>>>>>> Stashed changes
 @RequestMapping("/api")
 @RequiredArgsConstructor
 >>>>>>> Stashed changes
@@ -29,8 +32,11 @@ public class UserController {
 
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         return userService.createUser(user);
 =======
+=======
+>>>>>>> Stashed changes
     @PostMapping("/sign-up")
     public ResponseEntity<UserResponseDto> registerUser(@RequestBody RegisterRequestDto userDto) {
 
