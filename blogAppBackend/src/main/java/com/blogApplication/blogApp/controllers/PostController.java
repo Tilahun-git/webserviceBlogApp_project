@@ -1,7 +1,6 @@
 package com.blogApplication.blogApp.controllers;
 
 import com.blogApplication.blogApp.dto.postDto.PostDto;
-import com.blogApplication.blogApp.dto.postDto.PostResponseDto;
 import com.blogApplication.blogApp.services.servicesImpl.PostServiceImpl;
 import com.blogApplication.blogApp.services.servicesImpl.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,26 +23,8 @@ public class PostController {
 
     @Autowired
     private PostServiceImpl postService;
-    @Autowired
-    private UserServiceImpl userServiceImpl;
 
     // GET METHOD TO RETRIEVE ALL POSTS
-
-//    @GetMapping("/public")
-//    public ResponseEntity <List<PostResponseDto>> getAllPosts(
-//            @RequestParam(defaultValue = "0") int pageNumber,
-//            @RequestParam(defaultValue = "10") int pageSize,
-//            @RequestParam(defaultValue = "createdAt") String sortBy,
-//            @RequestParam(defaultValue = "desc") String sortDir
-//    ) {
-//
-//        Sort sort = sortDir.equalsIgnoreCase("asc")
-//                ? Sort.by(sortBy).ascending()
-//                : Sort.by(sortBy).descending();
-//        List<PostResponseDto> postsDto = postService.getAllPosts();
-//
-//        return ResponseEntity.ok(postsDto);
-//    }
 
     @GetMapping("/public")
     public ResponseEntity<Map<String, Object>> getAllPosts(
@@ -58,7 +39,7 @@ public class PostController {
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
 
-        Page<PostResponseDto> page = postService.getAllPosts(pageNumber, pageSize, sort, search);
+        Page<PostDto> page = postService.getAllPosts(pageNumber, pageSize, sort, search);
 
         Map<String, Object> response = new HashMap<>();
         response.put("posts", page.getContent());
@@ -73,23 +54,23 @@ public class PostController {
     //GET METHOD TO RETRIEVE SINGLE POST
 
     @GetMapping("post/public/{id}")
-    public ResponseEntity<PostResponseDto> getPostById(@PathVariable long id) {
-        return ResponseEntity.ok(postService.getPost(id));
+    public ResponseEntity<PostDto> getPostById(@PathVariable long id) {
+        return ResponseEntity.ok(postService.getPostById(id));
     }
 
     //POST METHOD TO ADD POST
 
     @PostMapping("/user/{userId}/category/{categoryId}/posts")
-    public ResponseEntity<PostResponseDto> addPost(@RequestBody PostDto postDto, @PathVariable long userId, @PathVariable long categoryId) {
-        return new ResponseEntity<PostResponseDto>(postService.createPost(postDto, userId, categoryId), HttpStatus.CREATED);
+    public ResponseEntity<PostDto> addPost(@RequestPart PostDto postDto,@RequestPart MultipartFile imageFile, @PathVariable long userId, @PathVariable long categoryId) throws IOException {
+        return new ResponseEntity<PostDto>(postService.createPost(postDto,imageFile, userId, categoryId), HttpStatus.CREATED);
 
     }
 
         //PUT METHOD TO UPDATE THE EXISTING POST
 
         @PutMapping("post/user/{id}")
-        public ResponseEntity<String> updatePost ( @PathVariable long id, @RequestBody PostDto postDto){
-            postService.updatePost(postDto, id);
+        public ResponseEntity<?> updatePost ( @PathVariable long id, @RequestPart PostDto postDto ,@RequestPart MultipartFile imageFile) throws IOException {
+            postService.updatePost(postDto,imageFile, id);
             return ResponseEntity.ok("Post updated successfully");
         }
 
@@ -105,7 +86,7 @@ public class PostController {
         // GET METHOD TO FIND POSTS BY SPECIFIC USER
 
         @GetMapping("/public/user/{userId}/posts")
-        public ResponseEntity<Page<PostResponseDto>> getPostsByUser (
+        public ResponseEntity<Page<PostDto>> getPostsByUser (
         @PathVariable("userId") long userId,
         @RequestParam(defaultValue = "0") int pageNumber,
         @RequestParam(defaultValue = "10") int pageSize,
@@ -116,7 +97,7 @@ public class PostController {
             Sort sort = sortDir.equalsIgnoreCase("asc")
                     ? Sort.by(sortBy).ascending()
                     : Sort.by(sortBy).descending();
-            Page<PostResponseDto> postsByUser = postService.getPostsByUser(userId, pageNumber, pageSize, sort);
+            Page<PostDto> postsByUser = postService.getPostsByUser(userId, pageNumber, pageSize, sort);
             return ResponseEntity.ok(postsByUser);
         }
 
@@ -134,7 +115,7 @@ public class PostController {
             Sort sort = sortDir.equalsIgnoreCase("asc")
                     ? Sort.by(sortBy).ascending()
                     : Sort.by(sortBy).descending();
-            Page<PostResponseDto> page = postService.getPostsByCategory(categoryId, pageNumber, pageSize, sort);
+            Page<PostDto> page = postService.getPostsByCategory(categoryId, pageNumber, pageSize, sort);
             Map<String, Object> response = new HashMap<>();
             response.put("posts", page.getContent());
             response.put("currentPage", page.getNumber());
@@ -147,18 +128,18 @@ public class PostController {
         // GET METHOD TO GET POSTS USING SEARCH QUERY
 
         @GetMapping("/public/search")
-        public ResponseEntity<Page<PostResponseDto>> searchPosts (
+        public ResponseEntity<Page<PostDto>> searchPosts (
                 @RequestParam String keyword,
-        @RequestParam(defaultValue = "0") int pageNumber,
-        @RequestParam(defaultValue = "10") int pageSize,
-        @RequestParam(defaultValue = "createdAt") String sortBy,
-        @RequestParam(defaultValue = "desc") String sortDir
+                @RequestParam(defaultValue = "0") int pageNumber,
+                @RequestParam(defaultValue = "10") int pageSize,
+                @RequestParam(defaultValue = "createdAt") String sortBy,
+                @RequestParam(defaultValue = "desc") String sortDir
     ){
 
             Sort sort = sortDir.equalsIgnoreCase("asc")
                     ? Sort.by(sortBy).ascending()
                     : Sort.by(sortBy).descending();
-            Page<PostResponseDto> posts = postService.searchPosts(keyword, pageNumber, pageSize, sort);
+            Page<PostDto> posts = postService.searchPosts(keyword, pageNumber, pageSize, sort);
 
             return ResponseEntity.ok(posts);
         }

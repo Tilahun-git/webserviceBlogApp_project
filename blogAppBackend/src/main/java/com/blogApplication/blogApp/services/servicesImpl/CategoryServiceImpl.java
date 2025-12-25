@@ -65,12 +65,10 @@ public class CategoryServiceImpl implements CategoryServiceContract {
 
     }
 
-
     public Page<CategoryDto> getAllCategoriesByPage(
             int pageNumber,
             int pageSize,
             Sort sort) {
-
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
 
@@ -78,8 +76,6 @@ public class CategoryServiceImpl implements CategoryServiceContract {
 
         return page.map(category -> modelMapper.map(category, CategoryDto.class));
     }
-
-
 
     @Override
     public Page<CategoryDto> searchCategories(

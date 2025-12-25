@@ -83,9 +83,7 @@ public class UserServiceImpl implements UserServiceContract {
     public UserResponseDto deleteUser(long id) {
         User deletedUser = userRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("User","id", id));
         userRepo.delete(deletedUser);
-
         return modelMapper.map(deletedUser, UserResponseDto.class);
-
     }
 
     @Override
@@ -94,7 +92,6 @@ public class UserServiceImpl implements UserServiceContract {
             int pageSize,
             Sort sort
     ) {
-
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
 

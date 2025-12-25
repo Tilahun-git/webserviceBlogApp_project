@@ -1,148 +1,6 @@
-//package com.blogApplication.blogApp.services.servicesImpl;
-//
-//import com.blogApplication.blogApp.dto.postDto.PostDto;
-//import com.blogApplication.blogApp.entities.Category;
-//import com.blogApplication.blogApp.entities.Post;
-//import com.blogApplication.blogApp.entities.User;
-//import com.blogApplication.blogApp.exceptions.ResourceNotFoundException;
-//import com.blogApplication.blogApp.repositories.CategoryRepo;
-//import com.blogApplication.blogApp.repositories.PostRepo;
-//import com.blogApplication.blogApp.repositories.UserRepo;
-//import com.blogApplication.blogApp.services.servicesContract.PostServiceContract;
-//import lombok.RequiredArgsConstructor;
-//import org.modelmapper.ModelMapper;
-//import org.springframework.data.domain.Page;
-//import org.springframework.data.domain.PageRequest;
-//import org.springframework.data.domain.Pageable;
-//import org.springframework.data.domain.Sort;
-//import org.springframework.stereotype.Service;
-//
-//import java.util.List;
-//import java.util.stream.Collectors;
-//
-//@Service
-//@RequiredArgsConstructor
-//public class PostServiceImpl implements PostServiceContract {
-//
-//    private  final PostRepo postRepo;
-//    private final UserRepo userRepo;
-//    private final CategoryRepo categoryRepo;
-//    private final ModelMapper modelMapper;
-//
-//
-//
-//    @Override
-//    public  List<PostDto> getAllPosts() {
-//        List<Post> posts = postRepo.findAll();
-//        if (posts.isEmpty()) {
-//            throw new ResourceNotFoundException("Post","There is no post found",null);
-//        }
-//        return posts.stream().map(post -> modelMapper.map(post,PostDto.class))
-//                .collect(Collectors.toList());
-//    }
-//    @Override
-//    public PostDto getPost(long id) {
-//        Post foundPost = postRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("Post","id",id));
-//        return modelMapper.map(foundPost, PostDto.class);
-//    }
-//
-//    @Override
-//    public PostDto createPost(PostDto postDto,long authorId, long categoryId) {
-//
-//
-//        User user = userRepo.findById(authorId)
-//                .orElseThrow(() ->
-//                        new ResourceNotFoundException("User","id",authorId));
-//
-//        Category category = categoryRepo.findById(categoryId)
-//                .orElseThrow(() ->
-//                        new ResourceNotFoundException("Category","id",categoryId));
-//        Post postCreated = modelMapper.map(postDto, Post.class);
-//        postCreated.setAuthor(user);
-//        postCreated.setCategory(category);
-//        postCreated.setImageName("post.png");
-//        Post savedPost = postRepo.save(postCreated);
-//        PostDto responseDto = modelMapper.map(savedPost, PostDto.class);
-//        responseDto.setAuthor(user.getUsername());
-//        responseDto.setAuthorId(savedPost.getAuthor().getId());
-//        responseDto.setCategoryId(savedPost.getCategory().getId());
-//        return responseDto;
-//
-//    }
-//
-//    @Override
-//    public PostDto updatePost(PostDto postDto, long id) {
-//        Post existingPost = postRepo.findById(id)
-//                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
-//
-//        modelMapper.map(postDto, existingPost);
-//        Post updatedPost = postRepo.save(existingPost);
-//        return modelMapper.map(updatedPost, PostDto.class);
-//    }
-//
-//    @Override
-//    public PostDto deletePostById(long id) {
-//        Post deletedPost = postRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("Post","id",id));
-//        postRepo.delete(deletedPost);
-//        return modelMapper.map(deletedPost, PostDto.class);
-//    }
-//
-//
-//    // method to get all posts in authored by a certain user
-//    @Override
-//    public Page<PostDto> getPostsByUser(long userId, int pageNumber, int pageSize, Sort sort) {
-//        User user = userRepo.findById(userId)
-//                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
-//
-//        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-//
-//        Page<Post> PostsByUser = postRepo.findAllByAuthor(user,pageable);
-//
-//        return PostsByUser.map(post -> modelMapper.map(post, PostDto.class));
-//    }
-//
-//    // method to get all posts in a certain category
-//
-//    public Page<PostDto> getPostsByCategory(long categoryId, int pageNumber, int pageSize, Sort sort) {
-//        Category category = categoryRepo.findById(categoryId)
-//                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
-//
-//        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-//
-//        Page<Post> PostsByCat = postRepo.findAllByCategory(category, pageable);
-//
-//        return PostsByCat.map(post -> modelMapper.map(post,PostDto.class));
-//    }
-//
-//    // method to search posts using keyword
-//
-//    @Override
-//    public Page<PostDto> searchPosts(
-//            String keyword,
-//            int pageNumber,
-//            int pageSize,
-//            Sort sort
-//    ) {
-//
-//        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-//
-//        Page<Post> searchedPosts = postRepo
-//                .findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(
-//                        keyword,
-//                        keyword,
-//                        pageable
-//                );
-//
-//        return searchedPosts.map(post -> modelMapper.map(post, PostDto.class));
-//    }
-//
-//
-//
-//}
 package com.blogApplication.blogApp.services.servicesImpl;
 
 import com.blogApplication.blogApp.dto.postDto.PostDto;
-import com.blogApplication.blogApp.dto.postDto.PostResponseDto;
 import com.blogApplication.blogApp.entities.Category;
 import com.blogApplication.blogApp.entities.Post;
 import com.blogApplication.blogApp.entities.User;
@@ -162,157 +20,193 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostServiceContract {
 
-    private final PostRepo postRepo;
+    private  final PostRepo postRepo;
     private final UserRepo userRepo;
     private final CategoryRepo categoryRepo;
     private final ModelMapper modelMapper;
-
-    // Helper method to convert Post -> PostResponseDto
-    private PostResponseDto mapToResponseDto(Post post) {
-        PostResponseDto.AuthorDto authorDto = new PostResponseDto.AuthorDto(
-                post.getAuthor().getUsername(),
-                post.getAuthor().getProfilePicture()
-        );
-
-        return new PostResponseDto(
-                post.getId(),
-                post.getTitle(),
-                post.getContent(),
-                post.getCategory().getTitle(),
-                post.getCreatedAt(),
-                authorDto
-        );
-    }
-
-//    @Override
-//    public List<PostResponseDto> getAllPosts() {
-//        List<Post> posts = postRepo.findAll();
-//        if (posts.isEmpty()) {
-//            throw new ResourceNotFoundException("Post", "There is no post found", null);
-//        }
-//        return posts.stream()
-//                .map(this::mapToResponseDto)
-//                .collect(Collectors.toList());
-//    }
+    private final CloudinaryImageServiceImpl cloudinaryImageServiceImpl;
 
 
     @Override
-    public Page<PostResponseDto> getAllPosts(int pageNumber, int pageSize, Sort sort, String search) {
+    public Page<PostDto> getAllPosts(int pageNumber, int pageSize, Sort sort, String search) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+        Page<Post> posts = postRepo.findAll(pageable);
 
-        Page<Post> postsPage;
+        return posts.map(post -> modelMapper.map(post, PostDto.class));
+    }
 
-        if (search != null && !search.isEmpty()) {
-            postsPage = postRepo.findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(search, search, pageable);
-        } else {
-            postsPage = postRepo.findAll(pageable);
+    public List<PostDto> getAllPosts() {
+        List<Post> posts = postRepo.findAll();
+
+        if (posts.isEmpty()) {
+            throw new ResourceNotFoundException("Post","There is no post found",null);
         }
+        return posts.stream().map(post -> {
+                    PostDto dto = modelMapper.map(post, PostDto.class);
 
-        // Convert Post → PostResponseDto
-        return postsPage.map(this::mapToResponseDto);
+                    dto.setAuthor(post.getAuthor().getUsername());
+                    dto.setCategoryTitle(post.getCategory().getTitle());
+
+                    return dto;
+                }).toList();
     }
 
     @Override
-<<<<<<< HEAD
-    public PostResponseDto getPost(long id) {
-        Post foundPost = postRepo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
-        return mapToResponseDto(foundPost);
+    public PostDto getPostById(long id) {
+        Post foundPost = postRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("Post","id",id));
+        return modelMapper.map(foundPost, PostDto.class);
     }
-=======
+
+    @Override
     public PostDto createPost(PostDto postDto, MultipartFile imageFile , long authorId, long categoryId) throws IOException {
 
->>>>>>> 63b3f89d0670f7ea70228f7da9cf3e1345ccfcf1
 
-    @Override
-    public PostResponseDto createPost(PostDto postDto, long authorId, long categoryId) {
         User user = userRepo.findById(authorId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", authorId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User","id",authorId));
 
         Category category = categoryRepo.findById(categoryId)
-<<<<<<< HEAD
-                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
-=======
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Category","id",categoryId));
         Post postCreated = modelMapper.map(postDto, Post.class);
         postCreated.setAuthor(user);
         postCreated.setCategory(category);
-        postCreated.setImageName(imageFile.getOriginalFilename());
-        postCreated.setImageType(imageFile.getContentType());
-        postCreated.setImageData(imageFile.getBytes());
+
+        // Use Cloudinary instead of storing in database
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String imageUrl = cloudinaryImageServiceImpl.uploadImage(imageFile);
+            postCreated.setImageUrl(imageUrl);
+            // Remove these database storage lines
+             postCreated.setImageName(imageFile.getOriginalFilename());
+             postCreated.setImageType(imageFile.getContentType());
+            // postCreated.setImageData(imageFile.getBytes());
+        }
 
         Post savedPost = postRepo.save(postCreated);
         PostDto responseDto = modelMapper.map(savedPost, PostDto.class);
 
-        responseDto.setAuthor(user.getUsername());
-        responseDto.setAuthorId(savedPost.getAuthor().getId());
-        responseDto.setCategoryId(savedPost.getCategory().getId());
+        responseDto.setAuthor(savedPost.getAuthor().getUsername());
+        responseDto.setCategoryTitle(savedPost.getCategory().getTitle());
         return responseDto;
->>>>>>> 63b3f89d0670f7ea70228f7da9cf3e1345ccfcf1
 
-        Post post = modelMapper.map(postDto, Post.class);
-        post.setAuthor(user);
-        post.setCategory(category);
-        post.setImageName("post.png"); // optional
-        Post savedPost = postRepo.save(post);
-
-        return mapToResponseDto(savedPost);
     }
 
     @Override
-    public PostResponseDto updatePost(PostDto postDto, long id) {
+    public PostDto updatePost(PostDto postDto, MultipartFile imageFile, long id) throws IOException {
         Post existingPost = postRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
 
         modelMapper.map(postDto, existingPost);
+
+        if (imageFile != null && !imageFile.isEmpty()) {
+            // Update image in Cloudinary
+            String newImageUrl = cloudinaryImageServiceImpl.updateImage(
+                    existingPost.getImageUrl(),
+                    imageFile
+            );
+            existingPost.setImageUrl(newImageUrl);
+            // Remove database image storage
+             existingPost.setImageName(imageFile.getOriginalFilename());
+             existingPost.setImageType(imageFile.getContentType());
+            // existingPost.setImageData(imageFile.getBytes());
+        }
+
         Post updatedPost = postRepo.save(existingPost);
+        PostDto updatedPostDto = modelMapper.map(updatedPost, PostDto.class);
 
-        return mapToResponseDto(updatedPost);
+        // Assign custom information
+        updatedPostDto.setAuthor(updatedPost.getAuthor().getUsername());
+        updatedPostDto.setCategoryTitle(updatedPost.getCategory().getTitle());
+        return updatedPostDto;
     }
 
     @Override
-    public PostResponseDto deletePostById(long id) {
-        Post post = postRepo.findById(id)
+    public PostDto deletePostById(long id) {
+        Post deletedPost = postRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
-        postRepo.delete(post);
-        return mapToResponseDto(post);
+
+        // Delete image from Cloudinary
+        if (deletedPost.getImageUrl() != null) {
+            cloudinaryImageServiceImpl.deleteImage(deletedPost.getImageUrl());
+        }
+
+        postRepo.delete(deletedPost);
+        PostDto deletedPostDto = modelMapper.map(deletedPost, PostDto.class);
+
+        // Assign custom information
+        deletedPostDto.setAuthor(deletedPost.getAuthor().getUsername());
+        deletedPostDto.setCategoryTitle(deletedPost.getCategory().getTitle());
+        return deletedPostDto;
     }
 
+
+    // method to get all posts in authored by a certain user
     @Override
-    public Page<PostResponseDto> getPostsByUser(long userId, int pageNumber, int pageSize, Sort sort) {
+    public Page<PostDto> getPostsByUser(long userId, int pageNumber, int pageSize, Sort sort) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-        Page<Post> postsByUser = postRepo.findAllByAuthor(user, pageable);
 
-        return postsByUser.map(this::mapToResponseDto);
+        Page<Post> PostsByUser = postRepo.findAllByAuthor(user,pageable);
+
+        return PostsByUser.map(post -> modelMapper.map(post, PostDto.class));
     }
 
-    @Override
-    public Page<PostResponseDto> getPostsByCategory(long categoryId, int pageNumber, int pageSize, Sort sort) {
+    // method to get all posts in a certain category
+
+    public Page<PostDto> getPostsByCategory(long categoryId, int pageNumber, int pageSize, Sort sort) {
         Category category = categoryRepo.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-        Page<Post> postsByCategory = postRepo.findAllByCategory(category, pageable);
 
-        return postsByCategory.map(this::mapToResponseDto);
+        Page<Post> PostsByCat = postRepo.findAllByCategory(category, pageable);
+
+        return PostsByCat.map(post -> modelMapper.map(post,PostDto.class));
     }
+
+    // method to search posts using keyword
 
     @Override
-    public Page<PostResponseDto> searchPosts(String keyword, int pageNumber, int pageSize, Sort sort) {
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-        Page<Post> searchedPosts = postRepo
-                .findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(keyword, keyword, pageable);
+    public Page<PostDto> searchPosts(
+            String keyword,
+            int pageNumber,
+            int pageSize,
+            Sort sort
+    ) {
 
-        return searchedPosts.map(this::mapToResponseDto);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+
+        Page<Post> searchedPosts = postRepo
+                .findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(
+                        keyword,
+                        keyword,
+                        pageable
+                );
+
+        if (searchedPosts.isEmpty()) {
+            throw new ResourceNotFoundException(
+                    "Post",
+                    "There is no post found",
+                    null
+            );
+        }
+
+        return searchedPosts.map(post -> {
+            PostDto dto = modelMapper.map(post, PostDto.class);
+            dto.setAuthor(post.getAuthor().getUsername());
+            dto.setCategoryTitle(post.getCategory().getTitle());
+            return dto;
+        });
     }
+
+
+
 }
+
