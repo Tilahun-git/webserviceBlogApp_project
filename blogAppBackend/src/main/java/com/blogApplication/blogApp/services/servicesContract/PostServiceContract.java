@@ -1,27 +1,31 @@
 package com.blogApplication.blogApp.services.servicesContract;
 
 import com.blogApplication.blogApp.dto.postDto.PostDto;
+import com.blogApplication.blogApp.dto.postDto.PostResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;
 
 public interface PostServiceContract {
-    List<PostDto> getAllPosts();
+//    List<PostResponseDto> getAllPosts();
 
-    PostDto getPost(long id);
+     Page<PostResponseDto> getAllPosts(int pageNumber, int pageSize, Sort sort, String search);
 
-    PostDto createPost(PostDto postDto, long authorId, long categoryId);
 
-    PostDto updatePost(PostDto postDto, long id);
+        PostResponseDto getPost(long id);
 
-    PostDto deletePostById(long id);
+    PostResponseDto createPost(PostDto postDto, long authorId, long categoryId);
 
-    Page<PostDto> getPostsByUser(long userId, int pageNumber, int pageSize, Sort sort);
+    PostResponseDto updatePost(PostDto postDto, long id);
 
-    Page<PostDto> getPostsByCategory(long categoryId, int pageNumber, int pageSize, Sort sort);
+    PostResponseDto deletePostById(long id);
 
-    Page<PostDto> searchPosts(
+    Page<PostResponseDto> getPostsByUser(long userId, int pageNumber, int pageSize, Sort sort);
+
+    Page<PostResponseDto> getPostsByCategory(long categoryId, int pageNumber, int pageSize, Sort sort);
+
+    Page<PostResponseDto> searchPosts(
             String keyword,
             int pageNumber,
             int pageSize,

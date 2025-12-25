@@ -17,9 +17,9 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api")
 
-@CrossOrigin(origins = "http://localhost:3000") // allow frontend
+//@CrossOrigin(origins = "http://localhost:3000") // allow frontend
 @RequiredArgsConstructor
 public class UserController {
     @Autowired
@@ -28,7 +28,7 @@ public class UserController {
 
     //  GET METHOD TO LIST ALL USERS
 
-    @GetMapping("/user-list")
+    @GetMapping("/list")
     public ResponseEntity <List<UserResponseDto>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
