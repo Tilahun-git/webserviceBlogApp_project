@@ -22,6 +22,7 @@ export interface Post {
   id: number;
   title: string;
   content: string;
+  imageUrl: string;
   category: string;
   createdAt: string;
   author: {
@@ -77,6 +78,7 @@ export const fetchPostsByCategory = async (
     id: p.id,
     title: p.title,
     content: p.content,
+    imageUrl: p.imageUrl,
     category: typeof p.category === "object" ? p.category.title : p.category,
     createdAt: p.createdAt,
     author: {
@@ -85,3 +87,36 @@ export const fetchPostsByCategory = async (
     },
   }));
 };
+
+
+//Api for searching
+export const searchPosts = async (
+  keyword: string,
+  sortOrder: "asc" | "desc" = "desc",
+  pageNumber: number = 0,
+  pageSize: number = 10
+): Promise<Post[]> => {
+  const response = await axiosInstance.get("/api/posts/public/search", {
+    params: {
+      keyword,
+      pageNumber,
+      pageSize,
+      sortDir: sortOrder,
+    },
+  });
+
+  const postsData = response.data?.content ?? [];
+
+  return postsData.map((p: any) => ({
+    id: p.id,
+    title: p.title,
+    content: p.content,
+    category: p.category,
+    createdAt: p.createdAt,
+    author: {
+      username: p.author.username,
+      profilePicture: p.author.profilePicture ?? null,
+    },
+  }));
+};
+

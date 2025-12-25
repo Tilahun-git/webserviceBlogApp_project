@@ -10,6 +10,7 @@ interface PostCardProps {
     id: number;
     title: string;
     content: string;
+    imageUrl: string;
     category: string;
     createdAt: string;
     author: {
@@ -25,8 +26,8 @@ export default function PostCard({ post }: PostCardProps) {
       {/* Author */}
       <div className="flex items-center gap-3 mb-4">
         <Image
-          src={post.author.profilePicture || '/avatar.png'}
-          alt={post.author.username}
+        src={post.imageUrl}
+          alt="Not found"
           width={40}
           height={40}
           className="rounded-full object-cover border border-gray-200 dark:border-gray-700"
