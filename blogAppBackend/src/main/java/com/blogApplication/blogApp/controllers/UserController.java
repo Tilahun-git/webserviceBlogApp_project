@@ -8,7 +8,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+<<<<<<< Updated upstream
 @RequestMapping("/api/users")
+=======
+@RequestMapping("/api")
+@RequiredArgsConstructor
+>>>>>>> Stashed changes
 public class UserController {
     private UserServiceImpl userService;
 
@@ -23,7 +28,14 @@ public class UserController {
     public User addUser(@RequestBody User user) {
 
 
+<<<<<<< Updated upstream
         return userService.createUser(user);
+=======
+    @PostMapping("/sign-up")
+    public ResponseEntity<UserResponseDto> registerUser(@RequestBody RegisterRequestDto userDto) {
+
+        return new ResponseEntity<>(userService.registerUser(userDto), HttpStatus.CREATED);
+>>>>>>> Stashed changes
     }
     @GetMapping("/{id}")
     public User getUser(@PathVariable long id) {

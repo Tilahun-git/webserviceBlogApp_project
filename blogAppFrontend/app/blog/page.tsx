@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import PostCard from '@/components/PostCard';
 import { Spinner } from '@/components/ui/spinner';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Select } from 'flowbite-react';
 
 interface Post {
   _id: string;
@@ -15,13 +16,19 @@ interface Post {
     username: string;
     profilePicture?: string;
   };
+  likes?: number;
+  comments?: number;
 }
 
-export default function BlogPage() {
+interface BlogPageProps {
+  currentUser?: { id: string; username: string } | null;
+}
+
+export default function BlogPage({ currentUser }: BlogPageProps) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState('all');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); 
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const categories = ['all', 'reactjs', 'nextjs', 'javascript'];
 
@@ -49,6 +56,8 @@ export default function BlogPage() {
             category: categoryValue,
             createdAt: p.createdAt,
             author: p.author,
+            likes: p.likes,
+            comments: p.comments,
           };
         });
 
@@ -70,39 +79,39 @@ export default function BlogPage() {
     );
 
   return (
-    <div className="min-h-screen  transition-colors duration-300 bg-gray-50 dark:bg-neutral-900
-     py-20 px-4 sm:px-6 lg:px-8 mb-20">
+    <div className="min-h-screen transition-colors duration-300 bg-gray-50 dark:bg-neutral-900 py-20 px-4 sm:px-6 lg:px-8 mb-20">
       <div className="max-w-5xl mx-auto">
-        <div className='flex justify-between items-center gap-10'>
-        <h1 className="text-3xl font-bold  mb-6 mr-0 text-gray-900 dark:text-white">
-          Blog Posts
-        </h1>
+        {/* Header + Sort */}
+        <div className="flex justify-between items-center gap-10 mb-6 flex-wrap">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            Blog Posts
+          </h1>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-4 justify-center mb-6">
-          <Select value={category} onValueChange={(value) => setCategory(value)}>
-            <SelectTrigger className="w-48 border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  {cat === 'all' ? 'All Categories' : cat.charAt(0).toUpperCase() + cat.slice(1)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'asc' | 'desc')}>
-            <SelectTrigger className="w-48 border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-              <SelectValue placeholder="Sort order" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="desc">Newest First</SelectItem>
-              <SelectItem value="asc">Oldest First</SelectItem>
-            </SelectContent>
+          <Select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+            className="border border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded px-3 py-1"
+          >
+            <option value="desc">Newest</option>
+            <option value="asc">Oldest</option>
           </Select>
         </div>
+
+        {/* Categories */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          {categories.map((cat) => (
+            <Button
+              key={cat}
+              onClick={() => setCategory(cat)}
+              className={`px-4 py-2 rounded-full font-medium transition-colors duration-300 ${
+                category === cat
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
+              }`}
+            >
+              {cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}
+            </Button>
+          ))}
         </div>
 
         {/* Posts Grid */}
@@ -111,17 +120,7 @@ export default function BlogPage() {
             <p className="text-center text-gray-500 dark:text-gray-400">No posts found.</p>
           ) : (
             posts.map((post) => (
-              <PostCard
-                key={post._id}
-                post={{
-                  _id: post._id,
-                  title: post.title,
-                  content: post.content.slice(0, 150) + '...',
-                  author: post.author,
-                  category: post.category,
-                  createdAt: post.createdAt,
-                }}
-              />
+              <PostCard key={post._id} post={post} currentUser={currentUser} />
             ))
           )}
         </div>

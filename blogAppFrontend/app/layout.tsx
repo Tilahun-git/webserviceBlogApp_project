@@ -6,6 +6,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import Provider from "@/components/provider";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import { Toaster } from "@/components/ui/sonner";
+
 
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -38,6 +40,7 @@ export default function RootLayout({
           >
             <Navbar />
             {children}
+            <Toaster position="top-center" richColors/>
             <Footer />
           </ThemeProvider>
         </Provider>
