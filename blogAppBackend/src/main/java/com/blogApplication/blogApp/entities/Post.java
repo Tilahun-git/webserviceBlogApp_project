@@ -37,8 +37,6 @@ public class Post {
     @Column
     private String imageType;
 
-//    @Lob
-//    private byte[] imageData;
 
     @Column(name = "image_url")
     private String imageUrl;

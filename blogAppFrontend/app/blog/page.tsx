@@ -1,101 +1,139 @@
+
 'use client';
 
-import { useEffect, useState } from 'react';
-import PostCard from '@/components/PostCard';
-import { Spinner } from '@/components/ui/spinner';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-interface Post {
-  _id: string;
-  title: string;
-  content: string;
-  category: string;
-  createdAt: string;
-  author: {
-    username: string;
-    profilePicture?: string;
-  };
-}
+import { useEffect, useState } from "react";
+import PostCard from "@/components/PostCard";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  fetchCategories,
+  fetchPostsByCategory,
+  searchPosts,
+  Post,
+  Category,
+} from "@/lib/api";
 
 export default function BlogPage() {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [category, setCategory] = useState('all');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); 
 
-  const categories = ['all', 'reactjs', 'nextjs', 'javascript'];
+  const [category, setCategory] = useState<number>(0); // 0 = all
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
+  // 🔑 SEARCH STATES
+  const [inputValue, setInputValue] = useState("");   // typing only
+  const [searchQuery, setSearchQuery] = useState(""); // confirmed search
+
+  // Fetch categories
   useEffect(() => {
-    const fetchPosts = async () => {
+    const getCategories = async () => {
+      try {
+        const data = await fetchCategories();
+        setCategories([{ id: 0, title: "All Categories" }, ...data]);
+      } catch (err) {
+        console.error("Failed to fetch categories", err);
+      }
+    };
+    getCategories();
+  }, []);
+
+  // Fetch posts (category / sort / confirmed search)
+  useEffect(() => {
+    const getPosts = async () => {
       setLoading(true);
       try {
-        const params = new URLSearchParams();
-        if (category !== 'all') params.set('category', category);
-        params.set('sort', sortOrder);
+        let data: Post[];
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts?${params}`);
-        const data: Post[] = await res.json();
+        if (searchQuery.trim()) {
+          data = await searchPosts(searchQuery, sortOrder);
+        } else {
+          data = await fetchPostsByCategory(category, sortOrder);
+        }
 
-        const mappedPosts: Post[] = data.map((p) => {
-          const categoryValue =
-            typeof p.category === 'object' && p.category !== null && 'name' in p.category
-              ? (p.category as { name?: string }).name ?? String(p.category)
-              : String(p.category);
-
-          return {
-            _id: p._id,
-            title: p.title,
-            content: p.content,
-            category: categoryValue,
-            createdAt: p.createdAt,
-            author: p.author,
-          };
-        });
-
-        setPosts(mappedPosts);
+        setPosts(data);
       } catch (err) {
-        console.error(err);
+        console.error("Failed to fetch posts", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchPosts();
-  }, [category, sortOrder]);
 
-  if (loading)
+    getPosts();
+  }, [category, sortOrder, searchQuery]);
+
+  if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-neutral-900 transition-colors duration-300">
+      <div className="flex justify-center items-center min-h-screen">
         <Spinner />
       </div>
     );
+  }
 
   return (
-    <div className="min-h-screen  transition-colors duration-300 bg-gray-50 dark:bg-neutral-900
-     py-20 px-4 sm:px-6 lg:px-8 mb-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 py-20 px-4">
       <div className="max-w-5xl mx-auto">
-        <div className='flex justify-between items-center gap-10'>
-        <h1 className="text-3xl font-bold  mb-6 mr-0 text-gray-900 dark:text-white">
-          Blog Posts
-        </h1>
+
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            Blog Posts
+          </h1>
+
+          {/* SEARCH (controlled + submit) */}
+          <div className="flex gap-2 w-full sm:w-auto">
+            <input
+              type="text"
+              placeholder="Search posts..."
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setSearchQuery(inputValue.trim());
+                }
+              }}
+              className="w-full sm:w-72 px-4 py-2 border rounded-md dark:bg-gray-800 dark:border-gray-700"
+            />
+
+            <button
+              onClick={() => setSearchQuery(inputValue.trim())}
+              className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition"
+            >
+              Search
+            </button>
+          </div>
+        </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-4 justify-center mb-6">
-          <Select value={category} onValueChange={(value) => setCategory(value)}>
-            <SelectTrigger className="w-48 border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-              <SelectValue placeholder="Select category" />
+        <div className="flex flex-wrap gap-4 mb-8">
+          <Select
+            value={category.toString()}
+            onValueChange={(v) => setCategory(Number(v))}
+          >
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
               {categories.map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  {cat === 'all' ? 'All Categories' : cat.charAt(0).toUpperCase() + cat.slice(1)}
+                <SelectItem key={cat.id} value={cat.id.toString()}>
+                  {cat.title}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
-          <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'asc' | 'desc')}>
-            <SelectTrigger className="w-48 border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-              <SelectValue placeholder="Sort order" />
+          <Select
+            value={sortOrder}
+            onValueChange={(v) => setSortOrder(v as "asc" | "desc")}
+          >
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Sort" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="desc">Newest First</SelectItem>
@@ -103,23 +141,20 @@ export default function BlogPage() {
             </SelectContent>
           </Select>
         </div>
-        </div>
 
-        {/* Posts Grid */}
+        {/* Posts */}
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {posts.length === 0 ? (
-            <p className="text-center text-gray-500 dark:text-gray-400">No posts found.</p>
+            <p className="text-center text-gray-500">
+              No posts found.
+            </p>
           ) : (
             posts.map((post) => (
               <PostCard
-                key={post._id}
+                key={post.id}
                 post={{
-                  _id: post._id,
-                  title: post.title,
-                  content: post.content.slice(0, 150) + '...',
-                  author: post.author,
-                  category: post.category,
-                  createdAt: post.createdAt,
+                  ...post,
+                  content: post.content.slice(0, 150) + "...",
                 }}
               />
             ))

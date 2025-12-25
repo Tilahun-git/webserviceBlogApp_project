@@ -22,7 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -37,7 +36,14 @@ public class PostServiceImpl implements PostServiceContract {
 
 
     @Override
-    public  List<PostDto> getAllPosts() {
+    public Page<PostDto> getAllPosts(int pageNumber, int pageSize, Sort sort, String search) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+        Page<Post> posts = postRepo.findAll(pageable);
+
+        return posts.map(post -> modelMapper.map(post, PostDto.class));
+    }
+
+    public List<PostDto> getAllPosts() {
         List<Post> posts = postRepo.findAll();
 
         if (posts.isEmpty()) {
@@ -46,6 +52,8 @@ public class PostServiceImpl implements PostServiceContract {
         return posts.stream().map(post -> {
                     PostDto dto = modelMapper.map(post, PostDto.class);
 
+                    dto.setAuthor(post.getAuthor().getUsername());
+                    dto.setCategoryTitle(post.getCategory().getTitle());
                     // Assign custom information
                     dto.setAuthor(post.getAuthor().getUsername());
                     dto.setAuthorId(post.getAuthor().getId());
@@ -54,6 +62,7 @@ public class PostServiceImpl implements PostServiceContract {
                     return dto;
                 }).toList();
     }
+
     @Override
     public PostDto getPostById(long id) {
         Post foundPost = postRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("Post","id",id));
@@ -89,8 +98,7 @@ public class PostServiceImpl implements PostServiceContract {
         PostDto responseDto = modelMapper.map(savedPost, PostDto.class);
 
         responseDto.setAuthor(savedPost.getAuthor().getUsername());
-        responseDto.setAuthorId(savedPost.getAuthor().getId());
-        responseDto.setCategoryId(savedPost.getCategory().getId());
+        responseDto.setCategoryTitle(savedPost.getCategory().getTitle());
         return responseDto;
 
     }
@@ -120,8 +128,7 @@ public class PostServiceImpl implements PostServiceContract {
 
         // Assign custom information
         updatedPostDto.setAuthor(updatedPost.getAuthor().getUsername());
-        updatedPostDto.setAuthorId(updatedPost.getAuthor().getId());
-        updatedPostDto.setCategoryId(updatedPost.getCategory().getId());
+        updatedPostDto.setCategoryTitle(updatedPost.getCategory().getTitle());
         return updatedPostDto;
     }
 
@@ -140,8 +147,7 @@ public class PostServiceImpl implements PostServiceContract {
 
         // Assign custom information
         deletedPostDto.setAuthor(deletedPost.getAuthor().getUsername());
-        deletedPostDto.setAuthorId(deletedPost.getAuthor().getId());
-        deletedPostDto.setCategoryId(deletedPost.getCategory().getId());
+        deletedPostDto.setCategoryTitle(deletedPost.getCategory().getTitle());
         return deletedPostDto;
     }
 
@@ -191,9 +197,23 @@ public class PostServiceImpl implements PostServiceContract {
                         pageable
                 );
 
-        return searchedPosts.map(post -> modelMapper.map(post, PostDto.class));
+        if (searchedPosts.isEmpty()) {
+            throw new ResourceNotFoundException(
+                    "Post",
+                    "There is no post found",
+                    null
+            );
+        }
+
+        return searchedPosts.map(post -> {
+            PostDto dto = modelMapper.map(post, PostDto.class);
+            dto.setAuthor(post.getAuthor().getUsername());
+            dto.setCategoryTitle(post.getCategory().getTitle());
+            return dto;
+        });
     }
 
 
 
 }
+

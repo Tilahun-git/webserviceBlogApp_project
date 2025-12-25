@@ -1,11 +1,14 @@
 
 import type { Metadata } from "next";
+
 import "./globals.css";
 import { Inter, Playfair_Display } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Provider from "@/components/provider";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+
+
 
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
