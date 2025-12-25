@@ -37,8 +37,11 @@ public class Post {
     @Column
     private String imageType;
 
-    @Lob
-    private byte[] imageData;
+//    @Lob
+//    private byte[] imageData;
+
+    @Column(name = "image_url")
+    private String imageUrl;
 
     @Column
     private Long likeCount = 0L;

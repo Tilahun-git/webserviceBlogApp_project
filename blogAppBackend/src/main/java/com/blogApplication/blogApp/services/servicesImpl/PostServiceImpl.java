@@ -9,8 +9,10 @@ import com.blogApplication.blogApp.repositories.CategoryRepo;
 import com.blogApplication.blogApp.repositories.PostRepo;
 import com.blogApplication.blogApp.repositories.UserRepo;
 import com.blogApplication.blogApp.services.servicesContract.PostServiceContract;
+import com.cloudinary.Cloudinary;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,20 +32,30 @@ public class PostServiceImpl implements PostServiceContract {
     private final UserRepo userRepo;
     private final CategoryRepo categoryRepo;
     private final ModelMapper modelMapper;
+    private final CloudinaryImageServiceImpl cloudinaryImageServiceImpl;
 
 
 
     @Override
     public  List<PostDto> getAllPosts() {
         List<Post> posts = postRepo.findAll();
+
         if (posts.isEmpty()) {
             throw new ResourceNotFoundException("Post","There is no post found",null);
         }
-        return posts.stream().map(post -> modelMapper.map(post,PostDto.class))
-                .collect(Collectors.toList());
+        return posts.stream().map(post -> {
+                    PostDto dto = modelMapper.map(post, PostDto.class);
+
+                    // Assign custom information
+                    dto.setAuthor(post.getAuthor().getUsername());
+                    dto.setAuthorId(post.getAuthor().getId());
+                    dto.setCategoryId(post.getCategory().getId());
+
+                    return dto;
+                }).toList();
     }
     @Override
-    public PostDto getPost(long id) {
+    public PostDto getPostById(long id) {
         Post foundPost = postRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("Post","id",id));
         return modelMapper.map(foundPost, PostDto.class);
     }
@@ -62,14 +74,21 @@ public class PostServiceImpl implements PostServiceContract {
         Post postCreated = modelMapper.map(postDto, Post.class);
         postCreated.setAuthor(user);
         postCreated.setCategory(category);
-        postCreated.setImageName(imageFile.getOriginalFilename());
-        postCreated.setImageType(imageFile.getContentType());
-        postCreated.setImageData(imageFile.getBytes());
+
+        // Use Cloudinary instead of storing in database
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String imageUrl = cloudinaryImageServiceImpl.uploadImage(imageFile);
+            postCreated.setImageUrl(imageUrl);
+            // Remove these database storage lines
+             postCreated.setImageName(imageFile.getOriginalFilename());
+             postCreated.setImageType(imageFile.getContentType());
+            // postCreated.setImageData(imageFile.getBytes());
+        }
 
         Post savedPost = postRepo.save(postCreated);
         PostDto responseDto = modelMapper.map(savedPost, PostDto.class);
 
-        responseDto.setAuthor(user.getUsername());
+        responseDto.setAuthor(savedPost.getAuthor().getUsername());
         responseDto.setAuthorId(savedPost.getAuthor().getId());
         responseDto.setCategoryId(savedPost.getCategory().getId());
         return responseDto;
@@ -77,20 +96,53 @@ public class PostServiceImpl implements PostServiceContract {
     }
 
     @Override
-    public PostDto updatePost(PostDto postDto, long id) {
+    public PostDto updatePost(PostDto postDto, MultipartFile imageFile, long id) throws IOException {
         Post existingPost = postRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
 
         modelMapper.map(postDto, existingPost);
+
+        if (imageFile != null && !imageFile.isEmpty()) {
+            // Update image in Cloudinary
+            String newImageUrl = cloudinaryImageServiceImpl.updateImage(
+                    existingPost.getImageUrl(),
+                    imageFile
+            );
+            existingPost.setImageUrl(newImageUrl);
+            // Remove database image storage
+             existingPost.setImageName(imageFile.getOriginalFilename());
+             existingPost.setImageType(imageFile.getContentType());
+            // existingPost.setImageData(imageFile.getBytes());
+        }
+
         Post updatedPost = postRepo.save(existingPost);
-        return modelMapper.map(updatedPost, PostDto.class);
+        PostDto updatedPostDto = modelMapper.map(updatedPost, PostDto.class);
+
+        // Assign custom information
+        updatedPostDto.setAuthor(updatedPost.getAuthor().getUsername());
+        updatedPostDto.setAuthorId(updatedPost.getAuthor().getId());
+        updatedPostDto.setCategoryId(updatedPost.getCategory().getId());
+        return updatedPostDto;
     }
 
     @Override
     public PostDto deletePostById(long id) {
-        Post deletedPost = postRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("Post","id",id));
+        Post deletedPost = postRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
+
+        // Delete image from Cloudinary
+        if (deletedPost.getImageUrl() != null) {
+            cloudinaryImageServiceImpl.deleteImage(deletedPost.getImageUrl());
+        }
+
         postRepo.delete(deletedPost);
-        return modelMapper.map(deletedPost, PostDto.class);
+        PostDto deletedPostDto = modelMapper.map(deletedPost, PostDto.class);
+
+        // Assign custom information
+        deletedPostDto.setAuthor(deletedPost.getAuthor().getUsername());
+        deletedPostDto.setAuthorId(deletedPost.getAuthor().getId());
+        deletedPostDto.setCategoryId(deletedPost.getCategory().getId());
+        return deletedPostDto;
     }
 
 

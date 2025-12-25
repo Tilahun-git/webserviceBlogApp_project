@@ -11,11 +11,11 @@ import java.util.List;
 public interface PostServiceContract {
     List<PostDto> getAllPosts();
 
-    PostDto getPost(long id);
+    PostDto getPostById(long id);
 
     PostDto createPost(PostDto postDto, MultipartFile imageFile , long authorId, long categoryId) throws IOException;
 
-    PostDto updatePost(PostDto postDto, long id);
+    PostDto updatePost(PostDto postDto, MultipartFile imageFile, long id) throws IOException;
 
     PostDto deletePostById(long id);
 
