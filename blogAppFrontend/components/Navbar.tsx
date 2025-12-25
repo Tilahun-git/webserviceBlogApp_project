@@ -6,14 +6,30 @@ import ThemeToggle from "./ThemeToggle";
 import MobileNavigation from "./MobileNavigation";
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
+import { Search, User as UserIcon, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-type User = {
-  email: string;
-  firstName?: string;
-};
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/redux/store";
+import { signOut } from "@/redux/auth/authSlice";
 
 export default function Navigation() {
   const [isScroll, setIsScroll] = useState(false);
+  const router = useRouter();
+  // 2. Access Auth State from Redux
+  const dispatch = useDispatch();
+  const { user, isAuthenticated } = useSelector(
+    (state: RootState) => state.auth
+  );
+
+  const handleLogout = () => {
+    dispatch(signOut());
+    router.push("/");
+  };
+  const handleSearchClick = () => {
+    router.push("/search");
+  };
+
   const [user] = useState<User | null>(null);
 
   useEffect(() => {
@@ -53,6 +69,53 @@ export default function Navigation() {
                 {item.name}
               </Link>
             ))}
+            {/* 3. PROTECTED: Only show 'Create Post' if authenticated */}
+            {isAuthenticated && (
+              <Link href="/dashboard?tab=create-post">
+                <Button size="sm" variant="outline">
+                  Create Post
+                </Button>
+              </Link>
+            )}
+            <div className="hidden md:flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleSearchClick}
+                className="text-white hover:text-blue-400"
+              >
+                <Search className="w-5 h-5" />
+              </Button>
+            </div>
+            <ThemeToggle />
+            <div className="flex items-center h-16 gap-4">
+              {/* 4. AUTH UI: Logic for Guest vs Logged In */}
+              {!isAuthenticated ? (
+                <Link href="/auth/sign-up">
+                  <Button size="sm">Sign Up</Button>
+                </Link>
+              ) : (
+                <div className="flex items-center gap-4 border-l pl-4">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600">
+                      <UserIcon size={16} />
+                    </div>
+                    <span>{user?.firstName || user?.email}</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                  >
+                    <LogOut size={16} className="mr-2" />
+                    Logout
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+          {/* mobile navigation */}
 
             <Link href="/admin">
               <Button size="sm" variant="outline">

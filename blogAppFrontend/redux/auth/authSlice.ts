@@ -103,6 +103,8 @@
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { signupApi, signInApi, SignupData, SigninData } from '@/lib/api';
+import Cookies from 'js-cookie';
+
 
 /* ---------- SIGN UP ---------- */
 export const signUpUser = createAsyncThunk(
@@ -131,6 +133,7 @@ export const signInUser = createAsyncThunk(
 );
 
 interface AuthState {
+ user: { firstName?: string; email: string; profilePic?: string } | null;
   isAuthenticated: boolean;
   token: string | null;
   loading: boolean;
@@ -138,6 +141,7 @@ interface AuthState {
 }
 
 const initialState: AuthState = {
+  user: null,
   isAuthenticated: false,
   token: null,
   loading: false,
@@ -150,8 +154,13 @@ const authSlice = createSlice({
   reducers: {
     signOut: (state) => {
       state.isAuthenticated = false;
+      state.user = null;
       state.token = null;
+      state.error = null;
       localStorage.removeItem('token');
+
+      // Clear Cookie for Middleware
+      Cookies.remove('token');
     },
     loadToken: (state) => {
       const token = localStorage.getItem('token');

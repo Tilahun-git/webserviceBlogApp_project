@@ -5,13 +5,16 @@ export const featuredPosts = [
     title: "The Complete Guide to Next.js App Router",
     excerpt:
       "Learn how the App Router works in Next.js and how to structure modern React applications.",
-    author: "Tibebu Dereje",
+    authorName: "Tibebu Dereje",
+    authorPhoto: "https://randomuser.me/api/portraits/men/32.jpg",
     date: "Aug 12, 2025",
     readingTime: "6 min read",
     tags: ["Next.js", "React", "Frontend"],
     categories: ["Web Development", "Frontend"],
     image:
       "https://images.pexels.com/photos/1181248/pexels-photo-1181248.jpeg?auto=compress&cs=tinysrgb&w=600",
+    likes: 24,
+    comments: 6,
   },
   {
     id: 2,
@@ -19,13 +22,16 @@ export const featuredPosts = [
     title: "Tailwind CSS Best Practices for Clean UI",
     excerpt:
       "How to write maintainable, scalable Tailwind CSS in real-world projects.",
-    author: "Tibebu Dereje",
+    authorName: "Tibebu Dereje",
+    authorPhoto: "https://randomuser.me/api/portraits/men/32.jpg",
     date: "Aug 10, 2025",
     readingTime: "5 min read",
     tags: ["Tailwind", "CSS", "UI"],
     categories: ["UI/UX", "Frontend"],
     image:
       "https://images.pexels.com/photos/1181263/pexels-photo-1181263.jpeg?auto=compress&cs=tinysrgb&w=600",
+    likes: 18,
+    comments: 4,
   },
   {
     id: 3,
@@ -33,13 +39,16 @@ export const featuredPosts = [
     title: "Professional UI Animations with Framer Motion",
     excerpt:
       "Create smooth and meaningful animations that improve UX without distraction.",
-    author: "Tibebu Dereje",
+    authorName: "Tibebu Dereje",
+    authorPhoto: "https://randomuser.me/api/portraits/men/32.jpg",
     date: "Aug 8, 2025",
     readingTime: "7 min read",
     tags: ["Animation", "Framer Motion"],
     categories: ["UI/UX", "Animation"],
     image:
       "https://images.pexels.com/photos/1181354/pexels-photo-1181354.jpeg?auto=compress&cs=tinysrgb&w=600",
+    likes: 15,
+    comments: 3,
   },
   {
     id: 4,
@@ -47,13 +56,16 @@ export const featuredPosts = [
     title: "Mastering Data Fetching with React Query",
     excerpt:
       "Learn how React Query simplifies fetching, caching, and updating server state in React apps.",
-    author: "Tibebu Dereje",
+    authorName: "Tibebu Dereje",
+    authorPhoto: "https://randomuser.me/api/portraits/men/32.jpg",
     date: "Aug 5, 2025",
     readingTime: "8 min read",
     tags: ["React Query", "Data Fetching", "React"],
     categories: ["Frontend", "Web Development"],
     image:
       "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=600",
+    likes: 22,
+    comments: 5,
   },
   {
     id: 5,
@@ -61,15 +73,19 @@ export const featuredPosts = [
     title: "Next.js SSR vs ISR: Choosing the Right Rendering Strategy",
     excerpt:
       "Understand the differences between Server-Side Rendering and Incremental Static Regeneration in Next.js.",
-    author: "Tibebu Dereje",
+    authorName: "Tibebu Dereje",
+    authorPhoto: "https://randomuser.me/api/portraits/men/32.jpg",
     date: "Aug 3, 2025",
     readingTime: "6 min read",
     tags: ["Next.js", "SSR", "ISR"],
     categories: ["Web Development", "Frontend"],
     image:
       "https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=600",
+    likes: 19,
+    comments: 7,
   },
 ];
+
 
 export const categories = [
   {

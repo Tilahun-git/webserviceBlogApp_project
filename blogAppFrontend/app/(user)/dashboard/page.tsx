@@ -2,8 +2,12 @@
 
 import { useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useSelector } from "react-redux"; // Import useSelector
-import { RootState } from "@/redux/store"; // Import your RootState type
+<<<<<<< Updated upstream
+import { useSelector } from "react-redux";
+=======
+import { useSelector } from "react-redux"; 
+>>>>>>> Stashed changes
+import { RootState } from "@/redux/store"; 
 import UserSidebar from "@/components/UserDashboard/UserSidebar";
 import CreatePost from "@/components/UserDashboard/CreatePost";
 import UserOverview from "@/components/UserDashboard/UserOverview";

@@ -1,5 +1,6 @@
 import axios, { AxiosResponse } from "axios";
 
+const API_BASE_URL = 'http://localhost:8080';
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_BACKEND_BASE_URL || "http://localhost:8080";
 
@@ -17,6 +18,9 @@ export interface SigninData {
   password: string;
 }
 
+export const signupApi = async (data: SignupData) => {
+  const res = await axios.post(`${API_BASE_URL}/user/sign-up`, data);
+  return res.data;
 // ---------------- POST & CATEGORY TYPES ----------------
 export interface Post {
   id: number;

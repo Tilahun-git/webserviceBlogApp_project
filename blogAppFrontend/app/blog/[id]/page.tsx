@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useSelector } from 'react-redux';
 import { Spinner } from '@/components/ui/spinner';
 import CommentSection from '@/components/CommentSection';
 import { Badge } from '@/components/ui/badge';
@@ -12,26 +13,38 @@ interface Author {
   profilePicture?: string;
 }
 
-interface Comment {
-  id: number;
-  content: string;
-  createdAt: string;
-  author: Author;
-}
-
 interface Post {
-  id: number;
+  id: number | string;
   title: string;
   content: string;
   createdAt: string;
   viewCount: number;
   category: { title: string };
   author: Author;
-  comments: Comment[];
+  likes?: number;
+  comments?: number;
+}
+
+// Define your Redux RootState type
+interface CurrentUser {
+  _id: string;
+  username: string;
+  profilePicture: string;
+}
+
+interface RootState {
+  user: {
+    currentUser: CurrentUser | null;
+  };
 }
 
 export default function PostDetailsPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+
+  const currentUser = useSelector(
+    (state: RootState) => state.user.currentUser
+  );
 
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,6 +56,10 @@ export default function PostDetailsPage() {
       try {
         setLoading(true);
 
+        // Increment view count
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/${id}/view`, {
+          method: 'PUT',
+        });
         // Optional: increment view count
         await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/posts/${id}/view`,
@@ -51,6 +68,7 @@ export default function PostDetailsPage() {
 
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/${id}`);
 
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/${id}`);
         if (!res.ok) throw new Error('Post not found');
 
         const data: Post = await res.json();
@@ -68,6 +86,7 @@ export default function PostDetailsPage() {
 
   if (loading) {
     return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-neutral-900">
       <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-neutral-900 transition-colors duration-300">
         <Spinner />
       </div>
@@ -82,7 +101,37 @@ export default function PostDetailsPage() {
     );
   }
 
+  const handleCommentClick = () => {
+    if (!currentUser) {
+      // Redirect to sign-in and return to this post
+      router.push(`/sign-in?callbackUrl=/posts/${post.id}`);
+    } else {
+      // Scroll to comment section
+      const el = document.getElementById('comments-section');
+      el?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 px-4 py-8">
+      <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+
+        {/* Author */}
+        <div className="flex items-center gap-4 mb-4">
+          <Image
+            src={post.author.profilePicture || '/avatar.png'}
+            alt={post.author.username}
+            width={40}
+            height={40}
+            className="rounded-full object-cover"
+          />
+          <div>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+              @{post.author.username}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {new Date(post.createdAt).toLocaleDateString()}
+            </p>
     <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 px-4 py-12 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
         <div className="p-6 sm:p-8">
@@ -106,6 +155,22 @@ export default function PostDetailsPage() {
             </div>
           </div>
 
+        {/* Title */}
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          {post.title}
+        </h1>
+
+        {/* Meta */}
+        <div className="flex items-center gap-4 mb-6 text-sm text-gray-500 dark:text-gray-400">
+          <Badge variant="secondary">{post.category.name}</Badge>
+          <span>👁 {post.viewCount}</span>
+          <span
+            className="cursor-pointer hover:text-blue-500 flex items-center gap-1"
+            onClick={handleCommentClick}
+          >
+            💬 {post.comments ?? 0}
+          </span>
+        </div>
           {/* Title */}
           <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mb-4">
             {post.title}
@@ -124,6 +189,9 @@ export default function PostDetailsPage() {
             {post.content}
           </article>
 
+        {/* Comment Section */}
+        <div id="comments-section">
+          <CommentSection postId={post.id.toString()} />
           {/* Comments Section */}
           <div className="mt-10">
             <CommentSection postId={post.id.toString()} />
@@ -133,3 +201,4 @@ export default function PostDetailsPage() {
     </div>
   );
 }
+        

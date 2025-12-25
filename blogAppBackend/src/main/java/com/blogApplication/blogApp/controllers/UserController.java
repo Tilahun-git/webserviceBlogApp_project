@@ -17,6 +17,9 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@RequestMapping("/api/users")
+@RequestMapping("/api")
+@RequiredArgsConstructor
 @RequestMapping("/api")
 
 //@CrossOrigin(origins = "http://localhost:3000") // allow frontend
@@ -43,6 +46,11 @@ public class UserController {
 
     // GET METHOD TO GET SINGLE USER
 
+        return userService.createUser(user);
+    @PostMapping("/sign-up")
+    public ResponseEntity<UserResponseDto> registerUser(@RequestBody RegisterRequestDto userDto) {
+
+        return new ResponseEntity<>(userService.registerUser(userDto), HttpStatus.CREATED);
     @GetMapping("/user/{id}")
     public ResponseEntity<UserResponseDto> getUser(@PathVariable Long id) {
         return  ResponseEntity.ok(userService.getUser(id));
