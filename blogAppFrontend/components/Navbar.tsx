@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { navItems } from "@/lib/constants";
 import Link from "next/link";
@@ -30,22 +30,21 @@ export default function Navigation() {
     router.push("/search");
   };
 
+  const [user] = useState<User | null>(null);
+
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setIsScroll(true);
-      } else {
-        setIsScroll(false);
-      }
+      setIsScroll(window.scrollY > 50);
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
   return (
     <nav
       className={
-        "fixed w-full bg-background border-t border-border/50 top-0 z-50 transition-all duration-300 " +
+        "fixed w-full top-0 z-50 transition-all duration-300 border-b border-border/50 " +
         (isScroll
           ? "backdrop-blur bg-white/75 dark:bg-gray-900/75 shadow-md"
           : "bg-transparent")
@@ -53,20 +52,19 @@ export default function Navigation() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <div className="flex shrink-0">
-            <h1 className="text-xl font-serif font-bold text-foreground">
-              Blog
-            </h1>
-          </div>
 
-          {/* Desktop navigation */}
+          {/* Logo */}
+          <Link href="/" className="text-xl font-serif font-bold text-foreground">
+            Blog
+          </Link>
+
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 {item.name}
               </Link>
@@ -118,6 +116,33 @@ export default function Navigation() {
             </div>
           </div>
           {/* mobile navigation */}
+
+            <Link href="/admin">
+              <Button size="sm" variant="outline">
+                Dashboard
+              </Button>
+            </Link>
+
+            <ThemeToggle />
+
+            {/* Auth */}
+            {!user ? (
+              <Link href="/auth/sign-up">
+                <Button size="sm">Sign Up</Button>
+              </Link>
+            ) : (
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-muted-foreground">
+                  Hi, {user.firstName || user.email}
+                </span>
+                <Button size="sm" variant="outline">
+                  Logout
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Navigation */}
           <MobileNavigation />
         </div>
       </div>

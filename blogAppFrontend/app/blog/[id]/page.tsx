@@ -19,7 +19,7 @@ interface Post {
   content: string;
   createdAt: string;
   viewCount: number;
-  category: { name: string };
+  category: { title: string };
   author: Author;
   likes?: number;
   comments?: number;
@@ -60,6 +60,13 @@ export default function PostDetailsPage() {
         await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/${id}/view`, {
           method: 'PUT',
         });
+        // Optional: increment view count
+        await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/posts/${id}/view`,
+          { method: 'PUT' }
+        );
+
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/${id}`);
 
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/${id}`);
         if (!res.ok) throw new Error('Post not found');
@@ -80,6 +87,7 @@ export default function PostDetailsPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-neutral-900">
+      <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-neutral-900 transition-colors duration-300">
         <Spinner />
       </div>
     );
@@ -124,8 +132,28 @@ export default function PostDetailsPage() {
             <p className="text-xs text-gray-500 dark:text-gray-400">
               {new Date(post.createdAt).toLocaleDateString()}
             </p>
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+        <div className="p-6 sm:p-8">
+
+          {/* Author Info */}
+          <div className="flex items-center gap-4 mb-6">
+            <Image
+              src={post.author.profilePicture || '/avatar.png'}
+              alt={post.author.username}
+              width={48}
+              height={48}
+              className="rounded-full object-cover border border-gray-200 dark:border-gray-700"
+            />
+            <div>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                @{post.author.username}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {new Date(post.createdAt).toLocaleDateString()}
+              </p>
+            </div>
           </div>
-        </div>
 
         {/* Title */}
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -143,15 +171,31 @@ export default function PostDetailsPage() {
             💬 {post.comments ?? 0}
           </span>
         </div>
+          {/* Title */}
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mb-4">
+            {post.title}
+          </h1>
 
-        {/* Content */}
-        <article className="prose dark:prose-invert max-w-none mb-10 whitespace-pre-line">
-          {post.content}
-        </article>
+          {/* Meta (Category + Views) */}
+          <div className="flex flex-wrap items-center gap-4 mb-6 text-sm text-gray-500 dark:text-gray-400">
+            <Badge variant="secondary" className="bg-teal-100 dark:bg-teal-800 text-teal-800 dark:text-teal-100 px-3 py-1 rounded-md font-medium">
+              {post.category.title}
+            </Badge>
+            <span className="flex items-center gap-1">👁 {post.viewCount} views</span>
+          </div>
+
+          {/* Post Content */}
+          <article className="prose prose-lg dark:prose-invert max-w-none mb-10 whitespace-pre-line text-gray-800 dark:text-gray-200">
+            {post.content}
+          </article>
 
         {/* Comment Section */}
         <div id="comments-section">
           <CommentSection postId={post.id.toString()} />
+          {/* Comments Section */}
+          <div className="mt-10">
+            <CommentSection postId={post.id.toString()} />
+          </div>
         </div>
       </div>
     </div>
