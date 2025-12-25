@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { signupApi, signInApi, SignupData, SigninData } from '@/lib/api';
 import Cookies from 'js-cookie';
 
+
 /* ---------- SIGN UP ---------- */
 export const signUpUser = createAsyncThunk(
   'auth/signUp',

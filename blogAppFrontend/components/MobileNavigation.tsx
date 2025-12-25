@@ -1,20 +1,9 @@
 "use client";
-
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import ThemeToggle from "./ThemeToggle";
 import { Button } from "./ui/button";
-import {
-  Menu,
-  Search,
-  LayoutDashboard,
-  User as UserIcon,
-  LogOut,
-} from "lucide-react";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger} from "@/components/ui/sheet";
+import ThemeToggle from "./ThemeToggle";
+import {Menu, Search, LayoutDashboard, User as UserIcon, LogOut} from "lucide-react";
+
 import { navItems } from "@/lib/constants";
 import Link from "next/link";
 import { useState } from "react";
