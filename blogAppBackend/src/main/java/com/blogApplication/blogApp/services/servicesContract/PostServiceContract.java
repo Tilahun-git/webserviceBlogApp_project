@@ -18,6 +18,10 @@ public interface PostServiceContract {
 
     PostDto getPostById(long id);
 
+    PostDto getPostById(long id);
+
+    PostDto createPost(PostDto postDto, MultipartFile imageFile , long authorId, long categoryId) throws IOException;
+
     PostDto updatePost(PostDto postDto, MultipartFile imageFile, long id) throws IOException;
 
     PostDto deletePostById(long id);

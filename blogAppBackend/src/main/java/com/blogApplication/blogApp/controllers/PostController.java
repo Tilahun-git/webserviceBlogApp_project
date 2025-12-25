@@ -28,6 +28,57 @@ public class PostController {
 
     @GetMapping("/public")
     public ResponseEntity<Map<String, Object>> getAllPosts(
+    public ResponseEntity <List<PostDto>> getAllPosts() {
+        List<PostDto> postsDto = postService.getAllPosts();
+
+        return ResponseEntity.ok(postsDto);
+    }
+
+    //GET METHOD TO RETIEVE SINGLE POST
+
+    @GetMapping("post/public/{id}")
+    public ResponseEntity<PostDto> getPostById(@PathVariable long id) {
+        return  ResponseEntity.ok( postService.getPostById(id));
+    }
+
+    //POST METHOD TO ADD POST
+
+    @PostMapping("/user/{userId}/category/{categoryId}/posts")
+    public ResponseEntity<?> addPost(@RequestPart PostDto postDto, @RequestPart MultipartFile imageFile ,@PathVariable long userId, @PathVariable long categoryId) throws IOException {
+        return new ResponseEntity<PostDto>(postService.createPost(postDto,imageFile,userId,categoryId), HttpStatus.CREATED);
+    }
+
+    //PUT METHOD TO UPDATE THE EXISTING POST
+
+
+    @PutMapping("/post/{postId}/update")
+    public ResponseEntity<?> updatePost(@RequestPart PostDto postDto, @RequestPart MultipartFile imageFile, @PathVariable long postId) throws IOException {
+        PostDto postDto1 = postService.updatePost(postDto,imageFile,postId);
+
+        if(postDto1 != null)
+            return ResponseEntity.ok(Map.of("message", "Post updated successfully", "data", postDto1));
+        else
+            return ResponseEntity.notFound().build();
+
+    }
+
+    //DELETE METHOD TO DELETE SINGLE POST
+
+    @DeleteMapping("/post/user/{id}")
+    public ResponseEntity<?> deletePost(@PathVariable long id) {
+        PostDto postDto2= postService.deletePostById(id);
+        if(postDto2 != null)
+            return ResponseEntity.ok(Map.of("message", "User deleted successfully", "data", postDto2));
+        else
+            return ResponseEntity.notFound().build();
+    }
+
+
+    // GET METHOD TO FIND POSTS BY SPECIFIC USER
+
+    @GetMapping("/public/user/{userId}/posts")
+    public ResponseEntity<Page<PostDto>> getPostsByUser(
+            @PathVariable("userId") long userId,
             @RequestParam(defaultValue = "0") int pageNumber,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(defaultValue = "createdAt") String sortBy,
@@ -146,3 +197,8 @@ public class PostController {
 
 
     }
+
+
+
+
+}

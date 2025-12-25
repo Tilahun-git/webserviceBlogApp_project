@@ -9,8 +9,10 @@ import com.blogApplication.blogApp.repositories.CategoryRepo;
 import com.blogApplication.blogApp.repositories.PostRepo;
 import com.blogApplication.blogApp.repositories.UserRepo;
 import com.blogApplication.blogApp.services.servicesContract.PostServiceContract;
+import com.cloudinary.Cloudinary;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +34,7 @@ public class PostServiceImpl implements PostServiceContract {
     private final CloudinaryImageServiceImpl cloudinaryImageServiceImpl;
 
 
+
     @Override
     public Page<PostDto> getAllPosts(int pageNumber, int pageSize, Sort sort, String search) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
@@ -51,6 +54,10 @@ public class PostServiceImpl implements PostServiceContract {
 
                     dto.setAuthor(post.getAuthor().getUsername());
                     dto.setCategoryTitle(post.getCategory().getTitle());
+                    // Assign custom information
+                    dto.setAuthor(post.getAuthor().getUsername());
+                    dto.setAuthorId(post.getAuthor().getId());
+                    dto.setCategoryId(post.getCategory().getId());
 
                     return dto;
                 }).toList();
