@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -37,30 +38,39 @@ public class PostController {
 
     @GetMapping("post/public/{id}")
     public ResponseEntity<PostDto> getPostById(@PathVariable long id) {
-        return  ResponseEntity.ok( postService.getPost(id));
+        return  ResponseEntity.ok( postService.getPostById(id));
     }
 
     //POST METHOD TO ADD POST
 
     @PostMapping("/user/{userId}/category/{categoryId}/posts")
-    public ResponseEntity<PostDto> addPost(@RequestPart PostDto postDto, @RequestPart MultipartFile imageFile ,@PathVariable long userId, @PathVariable long categoryId) throws IOException {
+    public ResponseEntity<?> addPost(@RequestPart PostDto postDto, @RequestPart MultipartFile imageFile ,@PathVariable long userId, @PathVariable long categoryId) throws IOException {
         return new ResponseEntity<PostDto>(postService.createPost(postDto,imageFile,userId,categoryId), HttpStatus.CREATED);
     }
 
     //PUT METHOD TO UPDATE THE EXISTING POST
 
-    @PutMapping("post/user/{id}")
-    public ResponseEntity<String> updatePost(@PathVariable long id, @RequestBody PostDto postDto) {
-        postService.updatePost(postDto,id);
-        return ResponseEntity.ok("Post updated successfully");
+
+    @PutMapping("/post/{postId}/update")
+    public ResponseEntity<?> updatePost(@RequestPart PostDto postDto, @RequestPart MultipartFile imageFile, @PathVariable long postId) throws IOException {
+        PostDto postDto1 = postService.updatePost(postDto,imageFile,postId);
+
+        if(postDto1 != null)
+            return ResponseEntity.ok(Map.of("message", "Post updated successfully", "data", postDto1));
+        else
+            return ResponseEntity.notFound().build();
+
     }
 
     //DELETE METHOD TO DELETE SINGLE POST
 
     @DeleteMapping("/post/user/{id}")
     public ResponseEntity<?> deletePost(@PathVariable long id) {
-         postService.deletePostById(id);
-        return ResponseEntity.ok("User deleted successfully");
+        PostDto postDto2= postService.deletePostById(id);
+        if(postDto2 != null)
+            return ResponseEntity.ok(Map.of("message", "User deleted successfully", "data", postDto2));
+        else
+            return ResponseEntity.notFound().build();
     }
 
 
@@ -119,13 +129,7 @@ public class PostController {
         return ResponseEntity.ok(posts);
     }
 
-    @GetMapping("/post/{postId}/image")
-    public ResponseEntity<byte[]> getPostImage(@PathVariable long postId) throws IOException {
-        PostDto postDto = postService.getPost(postId);
 
-        byte[] imageFile = postDto.getImageData();
-        return ResponseEntity.ok()
-                .contentType(MediaType.valueOf(postDto.getImageType()))
-                .body(imageFile);
-    }
+
+
 }
