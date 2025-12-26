@@ -17,14 +17,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostServiceContract {
-
     private  final PostRepo postRepo;
     private final UserRepo userRepo;
     private final CategoryRepo categoryRepo;
@@ -37,9 +34,13 @@ public class PostServiceImpl implements PostServiceContract {
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
         Page<Post> posts = postRepo.findAll(pageable);
 
-        return posts.map(post -> modelMapper.map(post, PostDto.class));
+        return posts.map(post -> {
+            PostDto post1 = modelMapper.map(post, PostDto.class);
+            post1.setAuthor(post.getAuthor().getUsername());
+            post1.setCategoryTitle(post.getCategory().getTitle());
+            return post1;
+        });
     }
-
     public List<PostDto> getAllPosts() {
         List<Post> posts = postRepo.findAll();
 
@@ -48,10 +49,8 @@ public class PostServiceImpl implements PostServiceContract {
         }
         return posts.stream().map(post -> {
                     PostDto dto = modelMapper.map(post, PostDto.class);
-
                     dto.setAuthor(post.getAuthor().getUsername());
                     dto.setCategoryTitle(post.getCategory().getTitle());
-
                     return dto;
                 }).toList();
     }
@@ -163,16 +162,11 @@ public class PostServiceImpl implements PostServiceContract {
     public Page<PostDto> getPostsByCategory(long categoryId, int pageNumber, int pageSize, Sort sort) {
         Category category = categoryRepo.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
-
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-
         Page<Post> PostsByCat = postRepo.findAllByCategory(category, pageable);
-
         return PostsByCat.map(post -> modelMapper.map(post,PostDto.class));
     }
-
     // method to search posts using keyword
-
     @Override
     public Page<PostDto> searchPosts(
             String keyword,
@@ -180,16 +174,13 @@ public class PostServiceImpl implements PostServiceContract {
             int pageSize,
             Sort sort
     ) {
-
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-
         Page<Post> searchedPosts = postRepo
                 .findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(
                         keyword,
                         keyword,
                         pageable
                 );
-
         if (searchedPosts.isEmpty()) {
             throw new ResourceNotFoundException(
                     "Post",
@@ -197,7 +188,6 @@ public class PostServiceImpl implements PostServiceContract {
                     null
             );
         }
-
         return searchedPosts.map(post -> {
             PostDto dto = modelMapper.map(post, PostDto.class);
             dto.setAuthor(post.getAuthor().getUsername());
