@@ -26,7 +26,7 @@ public class PostController {
     @GetMapping("/public")
     public ResponseEntity<Map<String, Object>> getAllPosts(
             @RequestParam(defaultValue = "0") int pageNumber,
-            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "4") int pageSize,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir,
             @RequestParam(required = false) String search // optional search by title/content
@@ -58,88 +58,107 @@ public class PostController {
     //POST METHOD TO ADD POST
 
     @PostMapping("/user/{userId}/category/{categoryId}/posts")
-    public ResponseEntity<PostDto> addPost(@RequestPart PostDto postDto,@RequestPart MultipartFile imageFile, @PathVariable long userId, @PathVariable long categoryId) throws IOException {
-        return new ResponseEntity<PostDto>(postService.createPost(postDto,imageFile, userId, categoryId), HttpStatus.CREATED);
+    public ResponseEntity<PostDto> addPost(@RequestPart PostDto postDto, @RequestPart MultipartFile imageFile, @PathVariable long userId, @PathVariable long categoryId) throws IOException {
+        return new ResponseEntity<PostDto>(postService.createPost(postDto, imageFile, userId, categoryId), HttpStatus.CREATED);
 
     }
 
-        //PUT METHOD TO UPDATE THE EXISTING POST
+    //PUT METHOD TO UPDATE THE EXISTING POST
 
-        @PutMapping("post/user/{id}")
-        public ResponseEntity<?> updatePost ( @PathVariable long id, @RequestPart PostDto postDto ,@RequestPart MultipartFile imageFile) throws IOException {
-            postService.updatePost(postDto,imageFile, id);
-            return ResponseEntity.ok("Post updated successfully");
-        }
-
-        //DELETE METHOD TO DELETE SINGLE POST
-
-        @DeleteMapping("/post/user/{id}")
-        public ResponseEntity<?> deletePost ( @PathVariable long id){
-            postService.deletePostById(id);
-            return ResponseEntity.ok("User deleted successfully");
-        }
-
-
-        // GET METHOD TO FIND POSTS BY SPECIFIC USER
-
-        @GetMapping("/public/user/{userId}/posts")
-        public ResponseEntity<Page<PostDto>> getPostsByUser (
-        @PathVariable("userId") long userId,
-        @RequestParam(defaultValue = "0") int pageNumber,
-        @RequestParam(defaultValue = "10") int pageSize,
-        @RequestParam(defaultValue = "createdAt") String sortBy,
-        @RequestParam(defaultValue = "desc") String sortDir
-    ){
-
-            Sort sort = sortDir.equalsIgnoreCase("asc")
-                    ? Sort.by(sortBy).ascending()
-                    : Sort.by(sortBy).descending();
-            Page<PostDto> postsByUser = postService.getPostsByUser(userId, pageNumber, pageSize, sort);
-            return ResponseEntity.ok(postsByUser);
-        }
-
-        // GET METHOD TO FIND POSTS BY SPECIFIC CATEGORY
-
-        @GetMapping("/public/category/{categoryId}/posts")
-
-        public ResponseEntity<Map<String, Object>> getPostsByCategory (
-        @PathVariable("categoryId") long categoryId,
-        @RequestParam(defaultValue = "0") int pageNumber,
-        @RequestParam(defaultValue = "10") int pageSize,
-        @RequestParam(defaultValue = "createdAt") String sortBy,
-        @RequestParam(defaultValue = "desc") String sortDir
-    ){
-            Sort sort = sortDir.equalsIgnoreCase("asc")
-                    ? Sort.by(sortBy).ascending()
-                    : Sort.by(sortBy).descending();
-            Page<PostDto> page = postService.getPostsByCategory(categoryId, pageNumber, pageSize, sort);
-            Map<String, Object> response = new HashMap<>();
-            response.put("posts", page.getContent());
-            response.put("currentPage", page.getNumber());
-            response.put("totalItems", page.getTotalElements());
-            response.put("totalPages", page.getTotalPages());
-
-            return ResponseEntity.ok(response);
-        }
-
-        // GET METHOD TO GET POSTS USING SEARCH QUERY
-
-        @GetMapping("/public/search")
-        public ResponseEntity<Page<PostDto>> searchPosts (
-                @RequestParam String keyword,
-                @RequestParam(defaultValue = "0") int pageNumber,
-                @RequestParam(defaultValue = "10") int pageSize,
-                @RequestParam(defaultValue = "createdAt") String sortBy,
-                @RequestParam(defaultValue = "desc") String sortDir
-    ){
-
-            Sort sort = sortDir.equalsIgnoreCase("asc")
-                    ? Sort.by(sortBy).ascending()
-                    : Sort.by(sortBy).descending();
-            Page<PostDto> posts = postService.searchPosts(keyword, pageNumber, pageSize, sort);
-
-            return ResponseEntity.ok(posts);
-        }
-
-
+    @PutMapping("post/user/{id}")
+    public ResponseEntity<?> updatePost(@PathVariable long id, @RequestPart PostDto postDto, @RequestPart MultipartFile imageFile) throws IOException {
+        postService.updatePost(postDto, imageFile, id);
+        return ResponseEntity.ok("Post updated successfully");
     }
+
+
+    //TOGGLE THE LIKE OF SPECIFIC POST
+
+    @PutMapping("/public/{postId}/like")
+    public ResponseEntity<Map<String, Object>> toggleLike(
+            @PathVariable long postId,
+            @RequestParam long userId
+    ) {
+        boolean liked = postService.toggleLike(postId, userId);
+
+        PostDto updatedPost = postService.getPostById(postId); // existing method
+        Map<String, Object> response = new HashMap<>();
+        response.put("post", updatedPost);
+        response.put("likedByCurrentUser", liked);
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    //DELETE METHOD TO DELETE SINGLE POST
+
+    @DeleteMapping("/post/user/{id}")
+    public ResponseEntity<?> deletePost(@PathVariable long id) {
+        postService.deletePostById(id);
+        return ResponseEntity.ok("User deleted successfully");
+    }
+
+
+    // GET METHOD TO FIND POSTS BY SPECIFIC USER
+
+    @GetMapping("/public/user/{userId}/posts")
+    public ResponseEntity<Page<PostDto>> getPostsByUser(
+            @PathVariable("userId") long userId,
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
+    ) {
+
+        Sort sort = sortDir.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Page<PostDto> postsByUser = postService.getPostsByUser(userId, pageNumber, pageSize, sort);
+        return ResponseEntity.ok(postsByUser);
+    }
+
+    // GET METHOD TO FIND POSTS BY SPECIFIC CATEGORY
+
+    @GetMapping("/public/category/{categoryId}/posts")
+
+    public ResponseEntity<Map<String, Object>> getPostsByCategory(
+            @PathVariable("categoryId") long categoryId,
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
+    ) {
+        Sort sort = sortDir.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Page<PostDto> page = postService.getPostsByCategory(categoryId, pageNumber, pageSize, sort);
+        Map<String, Object> response = new HashMap<>();
+        response.put("posts", page.getContent());
+        response.put("currentPage", page.getNumber());
+        response.put("totalItems", page.getTotalElements());
+        response.put("totalPages", page.getTotalPages());
+
+        return ResponseEntity.ok(response);
+    }
+
+    // GET METHOD TO GET POSTS USING SEARCH QUERY
+
+    @GetMapping("/public/search")
+    public ResponseEntity<Page<PostDto>> searchPosts(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
+    ) {
+
+        Sort sort = sortDir.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Page<PostDto> posts = postService.searchPosts(keyword, pageNumber, pageSize, sort);
+
+        return ResponseEntity.ok(posts);
+    }
+
+
+}

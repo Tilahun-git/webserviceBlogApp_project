@@ -2,10 +2,12 @@ package com.blogApplication.blogApp.services.servicesImpl;
 
 import com.blogApplication.blogApp.dto.postDto.PostDto;
 import com.blogApplication.blogApp.entities.Category;
+import com.blogApplication.blogApp.entities.Like;
 import com.blogApplication.blogApp.entities.Post;
 import com.blogApplication.blogApp.entities.User;
 import com.blogApplication.blogApp.exceptions.ResourceNotFoundException;
 import com.blogApplication.blogApp.repositories.CategoryRepo;
+import com.blogApplication.blogApp.repositories.LikeRepo;
 import com.blogApplication.blogApp.repositories.PostRepo;
 import com.blogApplication.blogApp.repositories.UserRepo;
 import com.blogApplication.blogApp.services.servicesContract.PostServiceContract;
@@ -21,9 +23,11 @@ import java.io.IOException;
 import java.util.List;
 @Service
 @RequiredArgsConstructor
+
 public class PostServiceImpl implements PostServiceContract {
     private  final PostRepo postRepo;
     private final UserRepo userRepo;
+    private final LikeRepo likeRepo;
     private final CategoryRepo categoryRepo;
     private final ModelMapper modelMapper;
     private final CloudinaryImageServiceImpl cloudinaryImageServiceImpl;
@@ -144,7 +148,37 @@ public class PostServiceImpl implements PostServiceContract {
     }
 
 
+
+    //toggle like of specific post
+    public boolean toggleLike(long postId, long userId) {
+        Post post = postRepo.findById(postId)
+                .orElseThrow(() -> new ResourceNotFoundException("Post","postId",postId));
+
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        var existingLike = likeRepo.findByPostAndUser(post, user);
+
+        if (existingLike.isPresent()) {
+            likeRepo.delete(existingLike.get());
+            post.setLikeCount(post.getLikeCount() - 1);
+            postRepo.save(post);
+            return false; // now unliked
+        } else {
+            Like like = new Like();
+            like.setPost(post);
+            like.setUser(user);
+            likeRepo.save(like);
+
+            post.setLikeCount(post.getLikeCount() + 1);
+            postRepo.save(post);
+            return true; // now liked
+        }
+    }
+
+
     // method to get all posts in authored by a certain user
+
     @Override
     public Page<PostDto> getPostsByUser(long userId, int pageNumber, int pageSize, Sort sort) {
         User user = userRepo.findById(userId)
@@ -160,6 +194,11 @@ public class PostServiceImpl implements PostServiceContract {
     // method to get all posts in a certain category
 
     public Page<PostDto> getPostsByCategory(long categoryId, int pageNumber, int pageSize, Sort sort) {
+
+        modelMapper.typeMap(Post.class, PostDto.class).addMappings(mapper -> {
+            mapper.map(src -> src.getAuthor().getUsername(), PostDto::setAuthor);
+            mapper.map(src -> src.getCategory().getTitle(), PostDto::setCategoryTitle);
+        });
         Category category = categoryRepo.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);

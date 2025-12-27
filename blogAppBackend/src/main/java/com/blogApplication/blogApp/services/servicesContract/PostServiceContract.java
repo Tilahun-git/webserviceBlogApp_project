@@ -22,6 +22,9 @@ public interface PostServiceContract {
 
     PostDto deletePostById(long id);
 
+    boolean toggleLike(long postId, long userId);
+
+
     Page<PostDto> getPostsByUser(long userId, int pageNumber, int pageSize, Sort sort);
 
     Page<PostDto> getPostsByCategory(long categoryId, int pageNumber, int pageSize, Sort sort);

@@ -42,7 +42,7 @@ public class Post {
     private String imageUrl;
 
     @Column
-    private Long likeCount = 0L;
+    private Integer likeCount = 0;
 
 
     @CreationTimestamp
