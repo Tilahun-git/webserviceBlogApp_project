@@ -1,282 +1,194 @@
+// components/CommentSection.tsx
 "use client";
 
-import { useEffect, useState, FormEvent } from "react";
+import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-
-import { AlertTriangle } from "lucide-react";
 import Comment from "./Comment";
+import { Loader2, Send } from "lucide-react";
 
-/* ================= TYPES ================= */
+type CommentData = {
+  id: number;
+  content: string;
+  postId: number;
+  userId: number;
+  createdAt: string;
+  likes: number[];
+};
+
+type CurrentUser = {
+  id: number;
+  isAdmin?: boolean;
+};
 
 interface CommentSectionProps {
-  postId: string;
+  postId: number;
 }
-
-interface CommentType {
-  _id: string;
-  content: string;
-  postId: string;
-  userId: string;
-  likes: string[];
-  createdAt: string;
-}
-
-interface CurrentUser {
-  _id: string;
-  username: string;
-  profilePicture: string;
-}
-
-/* ================= COMPONENT ================= */
 
 export default function CommentSection({ postId }: CommentSectionProps) {
-  const router = useRouter();
+  const [comments, setComments] = useState<CommentData[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const currentUser: CurrentUser | null = useSelector(
     (state: { user: { currentUser: CurrentUser | null } }) =>
       state.user.currentUser
   );
 
-  const [commentText, setCommentText] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [comments, setComments] = useState<CommentType[]>([]);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
-
-  /* ================= FETCH COMMENTS ================= */
-
+  // Fetch comments
   useEffect(() => {
-    async function fetchComments() {
+    const fetchComments = async () => {
       try {
+        setLoading(true);
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/comment/getPostComments/${postId}`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/comments/post/${postId}`
         );
-        if (!res.ok) return;
-        const data: CommentType[] = await res.json();
-        setComments(data);
-      } catch (err) {
-        console.error("Failed to fetch comments", err);
+        if (res.ok) {
+          const data = await res.json();
+          setComments(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch comments:", error);
+      } finally {
+        setLoading(false);
       }
-    }
+    };
 
     fetchComments();
   }, [postId]);
 
-  /* ================= CREATE COMMENT ================= */
+  // Handle submit new comment
+  const handleSubmit = async () => {
+    if (!newComment.trim() || !currentUser || submitting) return;
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-
-    if (!commentText.trim()) return;
-    if (!currentUser) return router.push("/sign-in");
-
+    setSubmitting(true);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/comment/create`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/comments`,
         {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            content: commentText,
-            postId,
-            userId: currentUser._id,
+            content: newComment,
+            postId: postId,
+            userId: currentUser.id,
           }),
         }
       );
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-
-      setComments((prev) => [data, ...prev]);
-      setCommentText("");
-      setError(null);
+      if (res.ok) {
+        const newCommentData: CommentData = await res.json();
+        setComments([newCommentData, ...comments]);
+        setNewComment("");
+      }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Something went wrong");
+      console.error("Failed to submit comment:", error);
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  /* ================= LIKE COMMENT ================= */
+  // Handle comment like
+  const handleLike = async (commentId: number) => {
+    if (!currentUser) return;
 
-  const handleLike = async (commentId: string) => {
-    if (!currentUser) return router.push("/sign-in");
-
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/comment/likeComment/${commentId}`,
-        {
-          method: "PUT",
-          credentials: "include",
-        }
-      );
-
-      if (!res.ok) return;
-
-      const data = await res.json();
-
-      setComments((prev) =>
-        prev.map((c) => (c._id === commentId ? { ...c, likes: data.likes } : c))
-      );
-    } catch (err) {
-      console.error("Like failed", err);
-    }
-  };
-
-  /* ================= EDIT COMMENT (OPTIMISTIC) ================= */
-
-  const handleEdit = (comment: CommentType, editedContent: string) => {
-    setComments((prev) =>
-      prev.map((c) =>
-        c._id === comment._id ? { ...c, content: editedContent } : c
+    setComments(prev =>
+      prev.map(comment =>
+        comment.id === commentId
+          ? {
+              ...comment,
+              likes: comment.likes.includes(currentUser.id)
+                ? comment.likes.filter(id => id !== currentUser.id)
+                : [...comment.likes, currentUser.id]
+            }
+          : comment
       )
     );
   };
 
-  /* ================= DELETE COMMENT ================= */
-
-  const handleDelete = async () => {
-    if (!commentToDelete || !currentUser) return;
-
-    try {
-      await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/comment/deleteComment/${commentToDelete}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
-
-      setComments((prev) => prev.filter((c) => c._id !== commentToDelete));
-    } catch (err) {
-      console.error("Delete failed", err);
-    } finally {
-      setDeleteDialogOpen(false);
-      setCommentToDelete(null);
-    }
+  // Handle comment edit
+  const handleEdit = (comment: CommentData, editedContent: string) => {
+    setComments(prev =>
+      prev.map(c =>
+        c.id === comment.id ? { ...c, content: editedContent } : c
+      )
+    );
   };
 
-  /* ================= UI ================= */
+  // Handle comment delete
+  const handleDelete = (commentId: number) => {
+    setComments(prev => prev.filter(comment => comment.id !== commentId));
+  };
 
   return (
-    <div className="max-w-2xl mx-auto w-full p-4">
-      {/* User Info */}
+    <div className="space-y-6">
+      {/* Add Comment Form */}
       {currentUser ? (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-5">
-          <span>Signed in as</span>
-          <Image
-            src={currentUser.profilePicture}
-            alt={currentUser.username}
-            width={20}
-            height={20}
-            className="rounded-full"
+        <div className="space-y-4">
+          <Textarea
+            id="comment-input"
+            placeholder="Write your comment..."
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            className="min-h-[100px] resize-none"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && e.ctrlKey) {
+                handleSubmit();
+              }
+            }}
           />
-          <Link
-            href="/dashboard?tab=profile"
-            className="text-primary hover:underline text-xs"
-          >
-            @{currentUser.username}
-          </Link>
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Press Ctrl+Enter to submit
+            </p>
+            <Button
+              onClick={handleSubmit}
+              disabled={!newComment.trim() || submitting}
+              className="bg-teal-600 hover:bg-teal-700"
+            >
+              {submitting ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Send className="h-4 w-4 mr-2" />
+              )}
+              Post Comment
+            </Button>
+          </div>
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground mb-5">
-          You must be signed in to comment.{" "}
-          <Link href="/sign-in" className="text-primary hover:underline">
-            Sign in
-          </Link>
-        </p>
-      )}
-
-      {/* Comment Form */}
-      {currentUser && (
-        <form
-          onSubmit={handleSubmit}
-          className="border rounded-lg p-4 space-y-3"
-        >
-          <Textarea
-            placeholder="Add a comment..."
-            value={commentText}
-            maxLength={200}
-            onChange={(e) => setCommentText(e.target.value)}
-          />
-
-          <div className="flex justify-between items-center">
-            <p className="text-xs text-muted-foreground">
-              {200 - commentText.length} characters remaining
-            </p>
-            <Button type="submit">Submit</Button>
-          </div>
-
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-        </form>
+        <div className="text-center p-6 border border-gray-200 dark:border-gray-700 rounded-lg">
+          <p className="text-gray-600 dark:text-gray-400">
+            Please sign in to leave a comment
+          </p>
+        </div>
       )}
 
       {/* Comments List */}
-      {comments.length === 0 ? (
-        <p className="text-sm mt-5">No comments yet.</p>
-      ) : (
-        <>
-          <div className="flex items-center gap-2 text-sm mt-6 mb-3">
-            <span>Comments</span>
-            <span className="border rounded px-2 py-0.5">
-              {comments.length}
-            </span>
+      <div className="space-y-0">
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
           </div>
-
-          {comments.map((comment) => (
+        ) : comments.length === 0 ? (
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            No comments yet. Be the first to comment!
+          </div>
+        ) : (
+          comments.map((comment) => (
             <Comment
-              key={comment._id}
+              key={comment.id}
               comment={comment}
+              postId={postId}
               onLike={handleLike}
               onEdit={handleEdit}
-              onDelete={(id: string) => {
-                setCommentToDelete(id);
-                setDeleteDialogOpen(true);
-              }}
+              onDelete={handleDelete}
             />
-          ))}
-        </>
-      )}
-
-      {/* Delete Confirmation */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-destructive" />
-              Delete comment?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          ))
+        )}
+      </div>
     </div>
   );
 }
