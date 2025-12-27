@@ -15,6 +15,8 @@ public class PostDto {
     private long id;
     private String title;
     private String content;
+    private String imageName;
+    private String imageType;
     private String imageUrl;
     private Integer likeCount;
     private String author;

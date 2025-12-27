@@ -7,6 +7,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import Provider from "@/components/provider";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import { Toaster } from "@/components/ui/sonner";
+
 
 
 
@@ -30,17 +32,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="scroll-smooth">
       <body
-        className={`${inter.variable} ${playfair.variable} antialiased leading-8 overflow-x-hidden`}
-      >
+        className={`${inter.variable} ${playfair.variable} antialiased leading-8 overflow-x-hidden`}>
         <Provider>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
             enableSystem
-            disableTransitionOnChange
-          >
+            disableTransitionOnChange>
             <Navbar />
             {children}
+            <Toaster position="top-center" richColors/>
             <Footer />
           </ThemeProvider>
         </Provider>
