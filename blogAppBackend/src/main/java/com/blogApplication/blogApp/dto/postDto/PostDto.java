@@ -15,9 +15,10 @@ public class PostDto {
     private long id;
     private String title;
     private String content;
-    private String imageName = "default.png";
+    private String mediaType;
+    private String mediaUrl;
+    private Integer likeCount;
     private String author;
-    private long authorId;
-    private long categoryId;
+    private String categoryTitle;
 
 }

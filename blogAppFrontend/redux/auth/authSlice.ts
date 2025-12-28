@@ -1,41 +1,37 @@
+
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { signupApi, signInApi, SignupData, SigninData } from '@/lib/api';
+import Cookies from 'js-cookie';
+
 
 /* ---------- SIGN UP ---------- */
 export const signUpUser = createAsyncThunk(
-  'auth/signUp',
-  async (data: SignupData, { rejectWithValue }) => {
-    try {
+    'auth/signUp',
+    async (data: SignupData, { rejectWithValue }) => {
+      try {
         return await signupApi(data);
-      } catch (err: unknown) {
-        if (typeof err === 'object' && err !== null && 'response' in err) {
-          const e = err as { response?: { data?: { message?: string } } };
-          return rejectWithValue(e.response?.data?.message ?? 'Signup failed');
-        }
-        return rejectWithValue('Signup failed');
+      } catch (err: any) {
+        return rejectWithValue(err.response?.data?.message ?? 'Signup failed');
       }
-  }
+    }
 );
 
 /* ---------- SIGN IN ---------- */
 export const signInUser = createAsyncThunk(
-  'auth/signIn',
-  async (data: SigninData, { rejectWithValue }) => {
-    try {
-      const res = await signInApi(data);
-      localStorage.setItem('token', res.token);
-      return res;
-    } catch (err: unknown) {
-      if (typeof err === 'object' && err !== null && 'response' in err) {
-        const e = err as { response?: { data?: { message?: string } } };
-        return rejectWithValue(e.response?.data?.message ?? 'Login failed');
+    'auth/signIn',
+    async (data: SigninData, { rejectWithValue }) => {
+      try {
+        const res = await signInApi(data);
+        localStorage.setItem('token', res.token);
+        return res;
+      } catch (err: any) {
+        return rejectWithValue(err.response?.data?.error ?? 'Login failed');
       }
-      return rejectWithValue('Login failed');
     }
-  }
 );
 
 interface AuthState {
+ user: { firstName?: string; email: string; profilePic?: string } | null;
   isAuthenticated: boolean;
   token: string | null;
   loading: boolean;
@@ -43,6 +39,7 @@ interface AuthState {
 }
 
 const initialState: AuthState = {
+  user: null,
   isAuthenticated: false,
   token: null,
   loading: false,
@@ -55,6 +52,7 @@ const authSlice = createSlice({
   reducers: {
     signOut: (state) => {
       state.isAuthenticated = false;
+      state.user = null;
       state.token = null;
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');

@@ -122,6 +122,7 @@
             <scope>test</scope>
         </dependency>
 
+<<<<<<< HEAD
         <!-- Optional: MapStruct for DTO mapping -->
         <dependency>
             <groupId>org.mapstruct</groupId>
@@ -134,6 +135,15 @@
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
         </dependency>
+=======
+        <!--        cloudinary -->
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http44</artifactId>
+            <version>1.36.0</version>
+        </dependency>
+
+>>>>>>> main
     </dependencies>
 
     <build>

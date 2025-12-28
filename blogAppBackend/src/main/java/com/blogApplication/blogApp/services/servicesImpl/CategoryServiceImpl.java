@@ -43,6 +43,11 @@ public class CategoryServiceImpl implements CategoryServiceContract {
 
     @Override
     public CategoryDto createCategory(CategoryDto categoryDto) {
+
+        if (categoryRepo.existsByTitle(categoryDto.getTitle())) {
+            throw new RuntimeException("Category with title '" + categoryDto.getTitle() + "' already exists");
+        }
+
         Category categoryTobeCreated = modelMapper.map(categoryDto, Category.class);
         categoryRepo.save(categoryTobeCreated);
         return modelMapper.map(categoryTobeCreated, CategoryDto.class);
@@ -65,12 +70,10 @@ public class CategoryServiceImpl implements CategoryServiceContract {
 
     }
 
-
     public Page<CategoryDto> getAllCategoriesByPage(
             int pageNumber,
             int pageSize,
             Sort sort) {
-
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
 
@@ -78,8 +81,6 @@ public class CategoryServiceImpl implements CategoryServiceContract {
 
         return page.map(category -> modelMapper.map(category, CategoryDto.class));
     }
-
-
 
     @Override
     public Page<CategoryDto> searchCategories(

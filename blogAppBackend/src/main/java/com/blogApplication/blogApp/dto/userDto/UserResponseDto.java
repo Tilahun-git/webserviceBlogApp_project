@@ -19,7 +19,8 @@ public class UserResponseDto {
     private String lastName;
     private String username;
     private String email;
+    private String mediaUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private boolean isActive;
+    private boolean active;
 }

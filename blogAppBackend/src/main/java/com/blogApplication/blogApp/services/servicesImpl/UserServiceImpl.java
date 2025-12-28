@@ -17,8 +17,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,58 +37,16 @@ public class UserServiceImpl implements UserServiceContract {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private CloudinaryMediaServiceImpl cloudinaryMediaService; // Changed to Media service
+
 
     @Override
     public UserResponseDto getUser(long id) {
 
         User user = userRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("User","id",id));
+        user.setActive(true);
         return modelMapper.map(user, UserResponseDto.class);
-    }
-
-    @Override
-    public List<UserResponseDto> getAllUsers() {
-        List<User> users = userRepo.findAll();
-        if(users.isEmpty()){
-            throw new ResourceNotFoundException("User",": there is no any user",null);
-        }
-        return users.stream().map(user -> modelMapper.map(user, UserResponseDto.class))
-                .collect(Collectors.toList());
-
-    }
-
-
-    @Override
-    public UserResponseDto registerUser(RegisterRequestDto userDto) {
-        if(userRepo.findByUsername(userDto.getUsername()).isPresent()){
-            throw new ResourceNotFoundException("User",": username is already in use",null);
-        }
-        if(userRepo.findByEmail(userDto.getEmail()).isPresent()){
-            throw new ResourceNotFoundException("User",": email is already registered",null);
-        }
-        User user = modelMapper.map(userDto, User.class);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        User createdUser = userRepo.save(user);
-        return modelMapper.map(createdUser, UserResponseDto.class);
-    }
-
-    public UserUpdateDto updateUser(UserUpdateDto userDto, long id) {
-        User existingUser = userRepo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
-
-        modelMapper.map(userDto, existingUser); // map into existingUser
-
-        User updatedUser = userRepo.save(existingUser);
-
-        return modelMapper.map(updatedUser, UserUpdateDto.class);
-    }
-
-    @Override
-    public UserResponseDto deleteUser(long id) {
-        User deletedUser = userRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("User","id", id));
-        userRepo.delete(deletedUser);
-
-        return modelMapper.map(deletedUser, UserResponseDto.class);
-
     }
 
     @Override
@@ -95,7 +56,6 @@ public class UserServiceImpl implements UserServiceContract {
             Sort sort
     ) {
 
-
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
 
         Page<User> userPage = userRepo.findAll(pageable);
@@ -104,25 +64,67 @@ public class UserServiceImpl implements UserServiceContract {
     }
 
     @Override
-    public Page<UserResponseDto> searchUsers(
-            String keyword,
-            int pageNumber,
-            int pageSize,
-            Sort sort
-    ) {
-
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-
-        Page<User> userPage =
-                userRepo.findByUsernameContainingIgnoreCaseOrFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
-                        keyword,
-                        keyword,
-                        keyword,
-                        pageable
-                );
-
-        return userPage.map(user -> modelMapper.map(user, UserResponseDto.class));
+    public UserResponseDto registerUser(RegisterRequestDto userDto, MultipartFile profileMedia) {
+        if(userRepo.findByUsername(userDto.getUsername()).isPresent()){
+            throw new ResourceNotFoundException("User",": username is already in use",null);
+        }
+        if(userRepo.findByEmail(userDto.getEmail()).isPresent()){
+            throw new ResourceNotFoundException("User",": email is already registered",null);
+        }
+        User user = modelMapper.map(userDto, User.class);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setMediaUrl(cloudinaryMediaService.uploadMedia(profileMedia));
+        User createdUser = userRepo.save(user);
+        return modelMapper.map(createdUser, UserResponseDto.class);
     }
 
+    public UserUpdateDto updateUser(UserUpdateDto userDto, long id, MultipartFile profileMedia) {
+        User existingUser = userRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 
-}
+        modelMapper.map(userDto, existingUser); // map into existingUser
+
+        User updatedUser = userRepo.save(existingUser);
+        updatedUser.setMediaUrl(cloudinaryMediaService.uploadMedia(profileMedia));
+
+        return modelMapper.map(updatedUser, UserUpdateDto.class);
+    }
+
+    @Override
+    public UserResponseDto activateAndDeActiveUser(long id) {
+        User user = userRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+
+        if (user.isActive())
+            user.setActive(false);
+        else
+            user.setActive(true);
+
+        userRepo.save(user);
+
+        return modelMapper.map(user, UserResponseDto.class);
+
+    }
+
+    @Override
+        public Page<UserResponseDto> searchUsers (
+                String keyword,
+        int pageNumber,
+        int pageSize,
+        Sort sort
+    ){
+
+            Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+
+            Page<User> userPage =
+                    userRepo.findByUsernameContainingIgnoreCaseOrFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
+                            keyword,
+                            keyword,
+                            keyword,
+                            pageable
+                    );
+
+            return userPage.map(user -> modelMapper.map(user, UserResponseDto.class));
+        }
+
+
+    }

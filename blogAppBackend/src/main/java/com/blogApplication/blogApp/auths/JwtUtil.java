@@ -12,7 +12,7 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    private final String SECRET_KEY = "mySecretKe25678934567898rertyf4567894567567567567y1234567890";
+    private final String SECRET_KEY = "bXlTZWNyZXRLZTI1Njc4OTM0NTY3ODk4cmVydHlmNDU2Nzg5NDU2NzU2NzU2NzU2N3kxMjM0NTY3ODkw";
     private final long EXPIRATION = 1000 * 60 * 60;
 
     private Key getSigningKey() {
@@ -37,7 +37,29 @@ public class JwtUtil {
                 .getSubject();
     }
 
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        return extractUsername(token).equals(userDetails.getUsername());
+    public boolean isTokenExpired(String token) {
+        try {
+            Date expiration = Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getExpiration();
+            return expiration.before(new Date());
+        } catch (Exception e) {
+            return true; // If can't parse, consider expired
+        }
     }
+
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        try {
+            String username = extractUsername(token);
+            boolean usernameMatch = username.equals(userDetails.getUsername());
+            boolean notExpired = !isTokenExpired(token);
+            return usernameMatch && notExpired;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }
