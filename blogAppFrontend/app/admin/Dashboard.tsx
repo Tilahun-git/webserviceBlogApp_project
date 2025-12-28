@@ -1,24 +1,18 @@
 import { ReactNode } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import {
-  LayoutDashboard,
-  FileText,
-  Users,
-  MessageSquare,
-  Settings,
-} from "lucide-react";
+import AdminLogoutButton from "@/app/admin/AdminLogoutButton";
+import { LayoutDashboard, FileText, Users, MessageSquare, Settings } from "lucide-react";
 
 interface AdminLayoutProps {
   children: ReactNode;
 }
 
 const navItems = [
-  { label: "Dashboard", icon: <LayoutDashboard />, href: "#" },
-  { label: "Posts", icon: <FileText />, href: "#" },
-  { label: "Users", icon: <Users />, href: "#" },
-  { label: "Comments", icon: <MessageSquare />, href: "#" },
-  { label: "Settings", icon: <Settings />, href: "#" },
+  { label: "Dashboard", icon: <LayoutDashboard />, href: "/admin" },
+  { label: "Posts", icon: <FileText />, href: "/admin/posts" },
+  { label: "Users", icon: <Users />, href: "/admin/users" },
+  { label: "Comments", icon: <MessageSquare />, href: "/admin/comments" },
+  { label: "Settings", icon: <Settings />, href: "/admin/settings" },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
@@ -47,9 +41,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
         <div className="p-4 border-t border-gray-800 flex items-center justify-between">
           <div>Admin</div>
-          <Button variant="ghost" size="sm">
-            Logout
-          </Button>
+          <AdminLogoutButton />
         </div>
       </aside>
 

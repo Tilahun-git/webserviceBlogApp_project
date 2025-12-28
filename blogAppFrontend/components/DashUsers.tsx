@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -9,15 +8,9 @@ import { Table } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertCircle, Check, X } from "lucide-react";
 import { Modal } from "flowbite-react";
+import { getUsers, updateUser, deleteUser, type User } from "@/lib/api";
+import UserFormModal from "@/components/UserFormModal";
 
-interface User {
-  _id: string;
-  username: string;
-  email: string;
-  profilePicture?: string;
-  isAdmin: boolean;
-  createdAt: string;
-}
 
 const PAGE_SIZE = 10;
 
@@ -29,19 +22,36 @@ export default function DashUsers() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [page, setPage] = useState<number>(1);
   const [totalUsers, setTotalUsers] = useState<number>(0);
+  const [editOpen, setEditOpen] = useState<boolean>(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  const openEdit = (user: User) => {
+    setSelectedUser(user);
+    setEditOpen(true);
+  };
+
+  const handleSaveEdit = async (data: Partial<User>) => {
+    if (!selectedUser) return;
+    try {
+      const updated = await updateUser(selectedUser._id, data);
+      setUsers((prev) => prev.map((u) => (u._id === updated._id ? updated : u)));
+      setEditOpen(false);
+      setSelectedUser(null);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(error.message);
+      } else {
+        console.error(String(error) || "Error updating user");
+      }
+    }
+  };
 
   // Fetch users
   const fetchUsers = async (page: number) => {
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/getusers?page=${page}&limit=${PAGE_SIZE}`,
-        { credentials: "include" }
-      );
-      const data = await res.json();
-      if (res.ok) {
-        setUsers(data.users);
-        setTotalUsers(data.total || 0);
-      }
+      const data = await getUsers(page, PAGE_SIZE);
+      setUsers(data.users);
+      setTotalUsers(data.total || 0);
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error(error.message);
@@ -52,26 +62,17 @@ export default function DashUsers() {
   };
 
   useEffect(() => {
-    if (!currentUser?.isAdmin) return;
     (async () => {
       await fetchUsers(page);
     })();
-  }, [currentUser?.isAdmin, page]);
+  }, [page]);
 
   // Delete user
   const handleDeleteUser = async () => {
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/delete/${userIdToDelete}`,
-        { method: "DELETE", credentials: "include" }
-      );
-      const data = await res.json();
-      if (res.ok) {
-        setUsers((prev) => prev.filter((u) => u._id !== userIdToDelete));
-        setShowModal(false);
-      } else {
-        console.error(data.message);
-      }
+      await deleteUser(userIdToDelete);
+      setUsers((prev) => prev.filter((u) => u._id !== userIdToDelete));
+      setShowModal(false);
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error(error.message);
@@ -93,8 +94,6 @@ export default function DashUsers() {
   );
 
   const totalPages = Math.ceil(totalUsers / PAGE_SIZE);
-
-  if (!currentUser?.isAdmin) return <p>You are not authorized to view this page.</p>;
 
   return (
     <div className="p-3 overflow-x-auto">
@@ -133,6 +132,7 @@ export default function DashUsers() {
             <th>Username</th>
             <th>Email</th>
             <th>Admin</th>
+            <th>Edit</th>
             <th>Delete</th>
           </tr>
         </thead>
@@ -156,6 +156,14 @@ export default function DashUsers() {
               </td>
               <td>
                 <span
+                  onClick={() => openEdit(user)}
+                  className="font-medium text-blue-500 hover:underline cursor-pointer"
+                >
+                  Edit
+                </span>
+              </td>
+              <td>
+                <span
                   onClick={() => {
                     setShowModal(true);
                     setUserIdToDelete(user._id);
@@ -170,6 +178,17 @@ export default function DashUsers() {
         </tbody>
       </Table>
 
+      {/* Edit User Modal */}
+      <UserFormModal
+        user={selectedUser}
+        open={editOpen}
+        onClose={() => {
+          setEditOpen(false);
+          setSelectedUser(null);
+        }}
+        onSave={handleSaveEdit}
+      />
+
       {/* Delete Confirmation Modal */}
       <Modal show={showModal} onClose={() => setShowModal(false)} size="md">
         <div className="text-center p-6">
@@ -179,7 +198,7 @@ export default function DashUsers() {
           </h3>
           <div className="flex justify-center gap-4">
             <Button color="failure" onClick={handleDeleteUser}>
-              Yes, I&apos;m sure
+              Yes, I\'m sure
             </Button>
             <Button color="gray" onClick={() => setShowModal(false)}>
               No, cancel

@@ -56,10 +56,21 @@ const authSlice = createSlice({
     signOut: (state) => {
       state.isAuthenticated = false;
       state.token = null;
-      localStorage.removeItem('token');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+        document.cookie = 'authToken=; path=/; max-age=0; SameSite=Lax';
+        document.cookie = 'userRole=; path=/; max-age=0; SameSite=Lax';
+      }
     },
     loadToken: (state) => {
-      const token = localStorage.getItem('token');
+      let token: string | null = null;
+      if (typeof window !== 'undefined') {
+        token = localStorage.getItem('token');
+        if (!token) {
+          const match = document.cookie.split('; ').find(c => c.startsWith('authToken='));
+          token = match ? match.split('=')[1] : null;
+        }
+      }
       if (token) {
         state.token = token;
         state.isAuthenticated = true;
@@ -88,8 +99,19 @@ const authSlice = createSlice({
       })
       .addCase(signInUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.token = action.payload.token;
-        state.isAuthenticated = true;
+        const token = action.payload?.token;
+        const role = (action.payload?.role ?? action.payload?.user?.role ?? 'user');
+        state.token = token ?? null;
+        state.isAuthenticated = Boolean(token);
+        if (typeof window !== 'undefined') {
+          if (token) {
+            localStorage.setItem('token', token);
+            document.cookie = `authToken=${token}; path=/; SameSite=Lax`;
+          }
+          if (role) {
+            document.cookie = `userRole=${String(role)}; path=/; SameSite=Lax`;
+          }
+        }
       })
       .addCase(signInUser.rejected, (state, action) => {
         state.loading = false;

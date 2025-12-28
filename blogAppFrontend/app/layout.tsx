@@ -1,34 +1,27 @@
+// app/layout.tsx
+"use client";
 
-import type { Metadata } from "next";
 import "./globals.css";
 import { Inter, Playfair_Display } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Provider from "@/components/provider";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
-
+import { usePathname } from "next/navigation";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-playfair",
-});
+const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 
-export const metadata: Metadata = {
-  title: "Writing That Resonates - A Modern Blog",
-  description: "Insights on tech, design, and creativity from a thought leoder",
-};
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+  // Hide footer on dashboard routes
+  const hideFooter = pathname.startsWith("/dashboard");
+
   return (
     <html lang="en" suppressHydrationWarning className="scroll-smooth">
-      <body
-        className={`${inter.variable} ${playfair.variable} antialiased leading-8 overflow-x-hidden`}
-      >
+      <body className={`${inter.variable} ${playfair.variable} antialiased leading-8 overflow-x-hidden`}>
         <Provider>
           <ThemeProvider
             attribute="class"
@@ -38,7 +31,8 @@ export default function RootLayout({
           >
             <Navbar />
             {children}
-            <Footer />
+            <Toaster position="top-right" richColors />
+            {!hideFooter && <Footer />}
           </ThemeProvider>
         </Provider>
       </body>

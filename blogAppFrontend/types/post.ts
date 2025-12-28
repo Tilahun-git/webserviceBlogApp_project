@@ -1,3 +1,5 @@
+export type PostType = "TEXT" | "IMAGE" | "VIDEO";
+
 export interface Post {
   id: number;
   title: string;
@@ -7,4 +9,13 @@ export interface Post {
   createdAt: string;
   views: number;
   thumbnail?: string;
+  postType: PostType;
+}
+
+export interface PostPayload {
+  title: string;
+  content: string;
+  category: string;
+  postType: PostType;
+  mediaUrl?: string;
 }

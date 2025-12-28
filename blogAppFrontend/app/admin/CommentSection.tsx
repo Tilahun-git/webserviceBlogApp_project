@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { AlertTriangle } from "lucide-react";
-import Comment from "./Comment";
+import Comment from "../../components/Comment";
 
 /* ================= TYPES ================= */
 
