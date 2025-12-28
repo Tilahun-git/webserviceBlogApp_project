@@ -15,11 +15,9 @@ public class PostDto {
     private long id;
     private String title;
     private String content;
-    private String imageName;
-    private String imageType;
-    private String imageUrl;
+    private String mediaType;
+    private String mediaUrl;
     private String author;
-    private long authorId;
-    private long categoryId;
+    private String categoryTitle;
 
 }

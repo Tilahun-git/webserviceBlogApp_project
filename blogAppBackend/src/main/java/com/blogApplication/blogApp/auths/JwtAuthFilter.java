@@ -1,12 +1,14 @@
 package com.blogApplication.blogApp.auths;
 
+import com.blogApplication.blogApp.entities.User;
+import com.blogApplication.blogApp.repositories.UserRepo;
 import com.blogApplication.blogApp.services.servicesImpl.SecurityService;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,14 +19,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    @Autowired
     private final JwtUtil jwtUtil;
-
-    @Autowired
     private final SecurityService securityService;
+    private final UserRepo userRepo; // Add this - use UserRepo instead of UserActivityService
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -32,42 +32,87 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 1. HANDLES THE PREFLIGHT (OPTIONS) REQUEST
-        // This prevents the filter from trying to validate a JWT on a handshake request
+        // Skip OPTIONS requests
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            response.setStatus(HttpServletResponse.SC_OK);
+            filterChain.doFilter(request, response);
             return;
         }
 
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String jwt = authHeader.substring(7);
+        // If no token, continue to public endpoints check
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
+        String jwt = authHeader.substring(7);
+        String username;
+
+        try {
+            // Try to extract username from token
+            username = jwtUtil.extractUsername(jwt);
+
+        } catch (ExpiredJwtException e) {
+            // Token expired
+            username = e.getClaims().getSubject();
+            sendErrorResponse(response, "Token expired. Please login again.");
+            return;
+
+        } catch (Exception e) {
+            // Other JWT errors
+            logger.error("Invalid JWT token: " + e.getMessage());
+            sendErrorResponse(response, "Invalid token");
+            return;
+        }
+
+        // If we have a username, process authentication
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
-                String username = jwtUtil.extractUsername(jwt);
+                // === ADD THIS ACTIVE CHECK ===
+                User user = userRepo.findByUsername(username)
+                        .orElseThrow(() -> new RuntimeException("User not found"));
 
-                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    UserDetails userDetails = securityService.loadUserByUsername(username);
-
-                    if (jwtUtil.isTokenValid(jwt, userDetails)) {
-                        UsernamePasswordAuthenticationToken authToken =
-                                new UsernamePasswordAuthenticationToken(
-                                        userDetails, null, userDetails.getAuthorities());
-
-                        authToken.setDetails(
-                                new WebAuthenticationDetailsSource().buildDetails(request));
-
-                        SecurityContextHolder.getContext().setAuthentication(authToken);
-                    }
+                if (!user.isActive()) {
+                    sendErrorResponse(response, "Account is deactivated. Contact admin.");
+                    return;
                 }
+                // === END ACTIVE CHECK ===
+
+                UserDetails userDetails = securityService.loadUserByUsername(username);
+
+                // Check if token is valid (not expired)
+                if (jwtUtil.isTokenValid(jwt, userDetails)) {
+                    // Set authentication
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails, null, userDetails.getAuthorities());
+
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request));
+
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                } else {
+                    // Token is invalid (expired, etc.)
+                    sendErrorResponse(response, "Token expired or invalid");
+                    return;
+                }
+
             } catch (Exception e) {
-                // If token extraction fails, we just continue the chain
-                // Spring Security will handle the 403/401 later based on your config
-                logger.error("Could not set user authentication in security context", e);
+                // Error loading user details
+                logger.error("Error loading user details for " + username + ": " + e.getMessage());
+                sendErrorResponse(response, "Authentication failed");
+                return;
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void sendErrorResponse(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\": \"" + message + "\"}");
     }
 }

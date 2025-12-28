@@ -39,6 +39,9 @@ public class User {
     @Column(unique = true,nullable = false)
     private String email;
 
+    @Column(name = "profile_media_url")
+    private String mediaUrl;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -47,19 +50,15 @@ public class User {
     @Column
     private LocalDateTime updatedAt;
 
-//    @Column(name = "is_active", nullable = false )
-//    private boolean isActive = false;
+//    @Column(name = "last_activity")
+//    private LocalDateTime lastActivity;
 
-    @ManyToMany(
-            fetch = FetchType.EAGER,
-            cascade = CascadeType.PERSIST
-    )
-    @JoinTable(
-            name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private Set<Role> roles = new HashSet<>();
+    @Column(name = "is_active", nullable = false )
+    private boolean active = true;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id")
+    private Role role;
 
     @OneToMany(
             fetch = FetchType.LAZY,

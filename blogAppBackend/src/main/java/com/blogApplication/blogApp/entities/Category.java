@@ -21,7 +21,7 @@ public class Category {
     @Column(name = "category_id")
     private long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false , unique = true)
     private String title;
 
     @OneToMany(mappedBy = "category",cascade = CascadeType.ALL,fetch = FetchType.LAZY)

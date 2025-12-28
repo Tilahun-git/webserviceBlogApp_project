@@ -31,17 +31,11 @@ public class Post {
     @Column
     private String content;
 
-    @Column
-    private String imageName;
+    @Column(name = "media_type")
+    private String mediaType; // IMAGE, VIDEO, NONE
 
-    @Column
-    private String imageType;
-
-//    @Lob
-//    private byte[] imageData;
-
-    @Column(name = "image_url")
-    private String imageUrl;
+    @Column(name = "media_url")
+    private String mediaUrl;
 
     @Column
     private Long likeCount = 0L;
@@ -65,6 +59,7 @@ public class Post {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Comment> comments = new HashSet<>();
+
 
 
 }

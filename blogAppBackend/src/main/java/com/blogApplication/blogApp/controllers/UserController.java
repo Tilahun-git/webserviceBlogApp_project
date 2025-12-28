@@ -12,6 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -36,9 +37,9 @@ public class UserController {
     // POST METHOD TO ADD NEW USER
 
     @PostMapping("/user/register")
-    public ResponseEntity<UserResponseDto> registerUser(@RequestBody RegisterRequestDto userDto) {
+    public ResponseEntity<UserResponseDto> registerUser(@RequestPart RegisterRequestDto userDto ,@RequestPart MultipartFile profileMedia) {
 
-        return new ResponseEntity<>(userService.registerUser(userDto), HttpStatus.CREATED);
+        return new ResponseEntity<>(userService.registerUser(userDto,profileMedia), HttpStatus.CREATED);
     }
 
     // GET METHOD TO GET SINGLE USER
@@ -50,8 +51,8 @@ public class UserController {
     //PUT METHOD TO UPDATE EXISTING USER
 
     @PutMapping("/user/{id}")
-    public ResponseEntity<UserUpdateDto> updateUser(@RequestBody UserUpdateDto userDto, @PathVariable Long id) {
-        UserUpdateDto updatedUser = userService.updateUser(userDto, id);
+    public ResponseEntity<UserUpdateDto> updateUser(@RequestPart UserUpdateDto userDto, @PathVariable Long id,@RequestPart MultipartFile profileMedia) {
+        UserUpdateDto updatedUser = userService.updateUser(userDto, id, profileMedia);
         return ResponseEntity.ok(updatedUser);
 
     }
@@ -59,11 +60,19 @@ public class UserController {
 
     // DELETE METHOD TO DELETE BY USING ID
 
-    @DeleteMapping("/user/admin/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        UserResponseDto deletedUser = userService.deleteUser(id);
-        return ResponseEntity.ok(Map.of("message", "User deleted successfully", "data", deletedUser));
+    @DeleteMapping("/user/admin/{id}/deactivate")
+    public ResponseEntity<?> deActivateUser(@PathVariable Long id) {
+        UserResponseDto deActivatedUser = userService.activateAndDeActiveUser(id);
+        return ResponseEntity.ok(Map.of("message", "User deactivated successfully", "data", deActivatedUser));
     }
+
+    @PutMapping("/user/admin/{id}/activate")
+    public ResponseEntity<?> activateUser(@PathVariable Long id) {
+        UserResponseDto activatedUser = userService.activateAndDeActiveUser(id);
+        return ResponseEntity.ok(Map.of("message", "User activated successfully", "data", activatedUser));
+    }
+
+
 
     // GET ALL USERS BY PAGINATION AND SORTING WHO CAN ADMIN
 

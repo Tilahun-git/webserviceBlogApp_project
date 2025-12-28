@@ -17,8 +17,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,11 +37,15 @@ public class UserServiceImpl implements UserServiceContract {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private CloudinaryMediaServiceImpl cloudinaryMediaService; // Changed to Media service
+
 
     @Override
     public UserResponseDto getUser(long id) {
 
         User user = userRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("User","id",id));
+        user.setActive(true);
         return modelMapper.map(user, UserResponseDto.class);
     }
 
@@ -55,7 +62,7 @@ public class UserServiceImpl implements UserServiceContract {
 
 
     @Override
-    public UserResponseDto registerUser(RegisterRequestDto userDto) {
+    public UserResponseDto registerUser(RegisterRequestDto userDto, MultipartFile profileMedia) {
         if(userRepo.findByUsername(userDto.getUsername()).isPresent()){
             throw new ResourceNotFoundException("User",": username is already in use",null);
         }
@@ -64,27 +71,35 @@ public class UserServiceImpl implements UserServiceContract {
         }
         User user = modelMapper.map(userDto, User.class);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setMediaUrl(cloudinaryMediaService.uploadMedia(profileMedia));
         User createdUser = userRepo.save(user);
         return modelMapper.map(createdUser, UserResponseDto.class);
     }
 
-    public UserUpdateDto updateUser(UserUpdateDto userDto, long id) {
+    public UserUpdateDto updateUser(UserUpdateDto userDto, long id, MultipartFile profileMedia) {
         User existingUser = userRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 
         modelMapper.map(userDto, existingUser); // map into existingUser
 
         User updatedUser = userRepo.save(existingUser);
+        updatedUser.setMediaUrl(cloudinaryMediaService.uploadMedia(profileMedia));
 
         return modelMapper.map(updatedUser, UserUpdateDto.class);
     }
 
     @Override
-    public UserResponseDto deleteUser(long id) {
-        User deletedUser = userRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("User","id", id));
-        userRepo.delete(deletedUser);
+    public UserResponseDto activateAndDeActiveUser(long id) {
+        User user = userRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("User","id", id));
 
-        return modelMapper.map(deletedUser, UserResponseDto.class);
+        if(user.isActive())
+            user.setActive(false);
+        else
+            user.setActive(true);
+
+        userRepo.save(user);
+
+        return modelMapper.map(user, UserResponseDto.class);
 
     }
 
@@ -123,6 +138,58 @@ public class UserServiceImpl implements UserServiceContract {
 
         return userPage.map(user -> modelMapper.map(user, UserResponseDto.class));
     }
+
+
+//    // =============== NEW METHODS FOR ACTIVITY TRACKING ===============
+//
+//    /**
+//     * Update user's last activity timestamp
+//     * Called when user logs in or makes any authenticated request
+//     */
+//    public void updateUserActivity(String username) {
+//        Optional<User> userOptional = userRepo.findByUsername(username);
+//        if (userOptional.isPresent()) {
+//            User user = userOptional.get();
+//            user.setLastActivity(LocalDateTime.now());
+//            user.setActive(true); // Ensure user is active when they're active
+//            userRepo.save(user);
+//        }
+//    }
+//
+//    /**
+//     * Deactivate a specific user
+//     * Called when token expires or manually by admin
+//     */
+//    public void deactivateUser(String username) {
+//        Optional<User> userOptional = userRepo.findByUsername(username);
+//        if (userOptional.isPresent()) {
+//            User user = userOptional.get();
+//            user.setActive(false);
+//            userRepo.save(user);
+//        }
+//    }
+//
+//    /**
+//     * Check if a user is active
+//     */
+//    public boolean isUserActive(String username) {
+//        return userRepo.findByUsername(username)
+//                .map(User::isActive)
+//                .orElse(false);
+//    }
+//
+//    /**
+//     * Activate a user (e.g., on successful login)
+//     */
+//    public void activateUser(String username) {
+//        Optional<User> userOptional = userRepo.findByUsername(username);
+//        if (userOptional.isPresent()) {
+//            User user = userOptional.get();
+//            user.setActive(true);
+//            user.setLastActivity(LocalDateTime.now());
+//            userRepo.save(user);
+//        }
+//    }
 
 
 }

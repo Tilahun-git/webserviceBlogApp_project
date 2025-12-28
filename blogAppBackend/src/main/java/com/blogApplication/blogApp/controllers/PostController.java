@@ -2,17 +2,16 @@ package com.blogApplication.blogApp.controllers;
 
 import com.blogApplication.blogApp.dto.postDto.PostDto;
 import com.blogApplication.blogApp.services.servicesImpl.PostServiceImpl;
-import com.blogApplication.blogApp.services.servicesImpl.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,60 +21,79 @@ public class PostController {
 
     @Autowired
     private PostServiceImpl postService;
-    @Autowired
-    private UserServiceImpl userServiceImpl;
 
     // GET METHOD TO RETRIEVE ALL POSTS
-
-    @GetMapping("/public")
-    public ResponseEntity <List<PostDto>> getAllPosts() {
+    @GetMapping("/public-list")
+    public ResponseEntity<List<PostDto>> getAllPosts() {
         List<PostDto> postsDto = postService.getAllPosts();
-
         return ResponseEntity.ok(postsDto);
     }
 
-    //GET METHOD TO RETIEVE SINGLE POST
-
+    // GET METHOD TO RETRIEVE SINGLE POST
     @GetMapping("post/public/{id}")
     public ResponseEntity<PostDto> getPostById(@PathVariable long id) {
-        return  ResponseEntity.ok( postService.getPostById(id));
+        return ResponseEntity.ok(postService.getPostById(id));
     }
 
-    //POST METHOD TO ADD POST
-
+    // POST METHOD TO ADD POST WITH MEDIA (IMAGE/VIDEO)
     @PostMapping("/user/{userId}/category/{categoryId}/posts")
-    public ResponseEntity<?> addPost(@RequestPart PostDto postDto, @RequestPart MultipartFile imageFile ,@PathVariable long userId, @PathVariable long categoryId) throws IOException {
-        return new ResponseEntity<PostDto>(postService.createPost(postDto,imageFile,userId,categoryId), HttpStatus.CREATED);
+    public ResponseEntity<?> addPost(
+            @RequestPart("post") PostDto postDto,
+            @RequestPart MultipartFile mediaFile,
+            @PathVariable long userId,
+            @PathVariable long categoryId
+    ) throws IOException {
+
+        PostDto createdPost = postService.createPost(postDto, mediaFile, userId, categoryId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of(
+                        "message", "Post created successfully",
+                        "data", createdPost
+                ));
     }
 
-    //PUT METHOD TO UPDATE THE EXISTING POST
-
-
+    // PUT METHOD TO UPDATE POST WITH OPTIONAL MEDIA
     @PutMapping("/post/{postId}/update")
-    public ResponseEntity<?> updatePost(@RequestPart PostDto postDto, @RequestPart MultipartFile imageFile, @PathVariable long postId) throws IOException {
-        PostDto postDto1 = postService.updatePost(postDto,imageFile,postId);
+    public ResponseEntity<?> updatePost(
+            @RequestPart("post") PostDto postDto,
+            @RequestPart MultipartFile mediaFile,
+            @PathVariable long postId
+    ) throws IOException {
 
-        if(postDto1 != null)
-            return ResponseEntity.ok(Map.of("message", "Post updated successfully", "data", postDto1));
-        else
-            return ResponseEntity.notFound().build();
-
+        PostDto updatedPost = postService.updatePost(postDto, mediaFile, postId);
+        return ResponseEntity.ok(Map.of(
+                "message", "Post updated successfully",
+                "data", updatedPost
+        ));
     }
 
-    //DELETE METHOD TO DELETE SINGLE POST
+    // PATCH METHOD TO UPDATE ONLY MEDIA
+    @PatchMapping("/post/{postId}/media")
+    public ResponseEntity<?> updatePostMedia(
+            @PathVariable long postId,
+            @RequestPart MultipartFile mediaFile,
+            @RequestPart("post") PostDto postDto
+    ) throws IOException {
 
+        PostDto updatedPost = postService.updatePost(postDto, mediaFile, postId);
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Post media updated successfully",
+                "data", updatedPost
+        ));
+    }
+
+    // DELETE METHOD TO DELETE POST
     @DeleteMapping("/post/user/{id}")
-    public ResponseEntity<?> deletePost(@PathVariable long id) {
-        PostDto postDto2= postService.deletePostById(id);
-        if(postDto2 != null)
-            return ResponseEntity.ok(Map.of("message", "User deleted successfully", "data", postDto2));
-        else
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<?> deletePost(@PathVariable long id) throws IOException{
+        PostDto deletedPost = postService.deletePostById(id);
+        return ResponseEntity.ok(Map.of(
+                "message", "Post deleted successfully",
+                "data", deletedPost
+        ));
     }
-
 
     // GET METHOD TO FIND POSTS BY SPECIFIC USER
-
     @GetMapping("/public/user/{userId}/posts")
     public ResponseEntity<Page<PostDto>> getPostsByUser(
             @PathVariable("userId") long userId,
@@ -84,18 +102,16 @@ public class PostController {
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir
     ) {
-
         Sort sort = sortDir.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
+
         Page<PostDto> postsByUser = postService.getPostsByUser(userId, pageNumber, pageSize, sort);
         return ResponseEntity.ok(postsByUser);
     }
 
     // GET METHOD TO FIND POSTS BY SPECIFIC CATEGORY
-
     @GetMapping("/public/category/{categoryId}/posts")
-
     public ResponseEntity<Page<PostDto>> getPostsByCategory(
             @PathVariable("categoryId") long categoryId,
             @RequestParam(defaultValue = "0") int pageNumber,
@@ -106,12 +122,12 @@ public class PostController {
         Sort sort = sortDir.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
+
         Page<PostDto> postsByCategory = postService.getPostsByCategory(categoryId, pageNumber, pageSize, sort);
         return ResponseEntity.ok(postsByCategory);
     }
 
-    // GET METHOD TO GET POSTS USING SEARCH QUERY
-
+    // GET METHOD TO SEARCH POSTS
     @GetMapping("/public/search")
     public ResponseEntity<Page<PostDto>> searchPosts(
             @RequestParam String keyword,
@@ -120,16 +136,55 @@ public class PostController {
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir
     ) {
-
         Sort sort = sortDir.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
-                :Sort.by(sortBy).descending();
-        Page<PostDto> posts = postService.searchPosts(keyword, pageNumber, pageSize, sort);
+                : Sort.by(sortBy).descending();
 
+        Page<PostDto> posts = postService.searchPosts(keyword, pageNumber, pageSize, sort);
         return ResponseEntity.ok(posts);
     }
 
+    // GET METHOD TO GET POST MEDIA DIRECTLY FROM CLOUDINARY
+    @GetMapping("/post/{postId}/media")
+    public ResponseEntity<?> getPostMedia(@PathVariable long postId) {
+        PostDto post = postService.getPostById(postId);
 
+        if (post.getMediaUrl() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Return Cloudinary URL directly
+        return ResponseEntity.ok(Map.of(
+                "mediaUrl", post.getMediaUrl(),
+                "mediaType", post.getMediaType()
+//                "thumbnailUrl", post.getThumbnailUrl()
+        ));
+    }
+
+
+    @GetMapping("/public-page")
+    public ResponseEntity<Map<String, Object>> getAllPosts(
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(required = false) String search // optional search by title/content
+    ) {
+
+        Sort sort = sortDir.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Page<PostDto> page = postService.getAllPosts(pageNumber, pageSize, sort, search);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("posts", page.getContent());
+        response.put("currentPage", page.getNumber());
+        response.put("totalItems", page.getTotalElements());
+        response.put("totalPages", page.getTotalPages());
+
+        return ResponseEntity.ok(response);
+    }
 
 
 }

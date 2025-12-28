@@ -42,17 +42,38 @@ public class SecurityConfig {
 //        return http.build();
 //    }
 
+//    @Bean
+//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+//        http
+//                .csrf(csrf -> csrf.disable()) // Disable CSRF for your API
+//                .cors(Customizer.withDefaults()) // MUST HAVE THIS
+//                .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Explicitly permit all OPTIONS
+//                        .requestMatchers("/api/users/user/register").permitAll()
+//                        .requestMatchers("/api/auth/login").permitAll()
+////                        .requestMatchers("/api/**").permitAll()
+//                        .anyRequest().authenticated()
+//                );
+//        return http.build();
+//    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF for your API
-                .cors(Customizer.withDefaults()) // MUST HAVE THIS
+                .csrf(csrf -> csrf.disable())
+                .cors(Customizer.withDefaults()) // Enable CORS properly
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Important for JWT
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Explicitly permit all OPTIONS
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow CORS preflight
                         .requestMatchers("/api/users/user/register").permitAll()
-                        .requestMatchers("/api/**").permitAll()
-                        .anyRequest().authenticated()
-                );
+                        .requestMatchers("/api/auth/**").permitAll() // Allow all auth endpoints
+//                        .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll() // Public read access
+//                        .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll() // Public read access
+//                        .requestMatchers("/api/users/admin/**").hasRole("ADMIN") // Admin-only endpoints
+                        .anyRequest().authenticated() // Everything else requires authentication
+                )
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter
+
         return http.build();
     }
 

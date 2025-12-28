@@ -43,6 +43,11 @@ public class CategoryServiceImpl implements CategoryServiceContract {
 
     @Override
     public CategoryDto createCategory(CategoryDto categoryDto) {
+
+        if (categoryRepo.existsByTitle(categoryDto.getTitle())) {
+            throw new RuntimeException("Category with title '" + categoryDto.getTitle() + "' already exists");
+        }
+
         Category categoryTobeCreated = modelMapper.map(categoryDto, Category.class);
         categoryRepo.save(categoryTobeCreated);
         return modelMapper.map(categoryTobeCreated, CategoryDto.class);
