@@ -1,12 +1,10 @@
 package com.blogApplication.blogApp.controllers;
 
-
 import com.blogApplication.blogApp.dto.userDto.RegisterRequestDto;
 import com.blogApplication.blogApp.dto.userDto.UserResponseDto;
 import com.blogApplication.blogApp.dto.userDto.UserUpdateDto;
 import com.blogApplication.blogApp.services.servicesImpl.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -17,65 +15,54 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/users")
 @RequestMapping("/api")
 @RequiredArgsConstructor
-@RequestMapping("/api")
-
-//@CrossOrigin(origins = "http://localhost:3000") // allow frontend
-@RequiredArgsConstructor
+//@CrossOrigin(origins = "http://localhost:3000") // Uncomment if frontend runs on localhost
 public class UserController {
-    @Autowired
-    private UserServiceImpl userService;
 
+    private final UserServiceImpl userService;
 
-    //  GET METHOD TO LIST ALL USERS
-
-    @GetMapping("/list")
-    public ResponseEntity <List<UserResponseDto>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    // -------------------- GET ALL USERS --------------------
+    @GetMapping("/users")
+    public ResponseEntity<List<UserResponseDto>> getAllUsers() {
+        List<UserResponseDto> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
     }
 
-    // POST METHOD TO ADD NEW USER
-
+    // -------------------- REGISTER NEW USER --------------------
     @PostMapping("/user/register")
     public ResponseEntity<UserResponseDto> registerUser(@RequestBody RegisterRequestDto userDto) {
-
-        return new ResponseEntity<>(userService.registerUser(userDto), HttpStatus.CREATED);
+        UserResponseDto createdUser = userService.registerUser(userDto);
+        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
     }
 
-    // GET METHOD TO GET SINGLE USER
-
-        return userService.createUser(user);
-    @PostMapping("/sign-up")
-    public ResponseEntity<UserResponseDto> registerUser(@RequestBody RegisterRequestDto userDto) {
-
-        return new ResponseEntity<>(userService.registerUser(userDto), HttpStatus.CREATED);
+    // -------------------- GET SINGLE USER --------------------
     @GetMapping("/user/{id}")
     public ResponseEntity<UserResponseDto> getUser(@PathVariable Long id) {
-        return  ResponseEntity.ok(userService.getUser(id));
+        UserResponseDto user = userService.getUser(id);
+        return ResponseEntity.ok(user);
     }
-    //PUT METHOD TO UPDATE EXISTING USER
 
+    // -------------------- UPDATE USER --------------------
     @PutMapping("/user/{id}")
-    public ResponseEntity<UserUpdateDto> updateUser(@RequestBody UserUpdateDto userDto, @PathVariable Long id) {
+    public ResponseEntity<UserUpdateDto> updateUser(
+            @RequestBody UserUpdateDto userDto,
+            @PathVariable Long id
+    ) {
         UserUpdateDto updatedUser = userService.updateUser(userDto, id);
         return ResponseEntity.ok(updatedUser);
-
     }
 
-
-    // DELETE METHOD TO DELETE BY USING ID
-
+    // -------------------- DELETE USER --------------------
     @DeleteMapping("/user/admin/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> deleteUser(@PathVariable Long id) {
         UserResponseDto deletedUser = userService.deleteUser(id);
-        return ResponseEntity.ok(Map.of("message", "User deleted successfully", "data", deletedUser));
+        return ResponseEntity.ok(
+                Map.of("message", "User deleted successfully", "data", deletedUser)
+        );
     }
 
-    // GET ALL USERS BY PAGINATION AND SORTING WHO CAN ADMIN
-
-
+    // -------------------- PAGINATED & SORTED USERS --------------------
     @GetMapping("/user/admin/users")
     public ResponseEntity<Page<UserResponseDto>> getAllUsers(
             @RequestParam(defaultValue = "0") int pageNumber,
@@ -83,17 +70,15 @@ public class UserController {
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir
     ) {
-
         Sort sort = sortDir.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
-        return ResponseEntity.ok(
-                userService.getAllUsers(pageNumber, pageSize, sort)
-        );
+
+        Page<UserResponseDto> usersPage = userService.getAllUsers(pageNumber, pageSize, sort);
+        return ResponseEntity.ok(usersPage);
     }
 
-    // GET ALL USERS BY SEARCHING WHO CAN ADMIN
-
+    // -------------------- SEARCH USERS --------------------
     @GetMapping("/public/search")
     public ResponseEntity<Page<UserResponseDto>> searchUsers(
             @RequestParam String keyword,
@@ -102,12 +87,11 @@ public class UserController {
             @RequestParam(defaultValue = "username") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir
     ) {
-
         Sort sort = sortDir.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
-        return ResponseEntity.ok(
-                userService.searchUsers(keyword, pageNumber, pageSize, sort)
-        );
+
+        Page<UserResponseDto> searchResult = userService.searchUsers(keyword, pageNumber, pageSize, sort);
+        return ResponseEntity.ok(searchResult);
     }
 }

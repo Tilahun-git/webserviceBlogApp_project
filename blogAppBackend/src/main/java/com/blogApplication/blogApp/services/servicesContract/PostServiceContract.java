@@ -13,11 +13,6 @@ public interface PostServiceContract {
 
      Page<PostDto> getAllPosts(int pageNumber, int pageSize, Sort sort, String search);
 
-
-    PostDto createPost(PostDto postDto, MultipartFile imageFile , long authorId, long categoryId) throws IOException;
-
-    PostDto getPostById(long id);
-
     PostDto getPostById(long id);
 
     PostDto createPost(PostDto postDto, MultipartFile imageFile , long authorId, long categoryId) throws IOException;
@@ -27,7 +22,6 @@ public interface PostServiceContract {
     PostDto deletePostById(long id);
 
     boolean toggleLike(long postId, long userId);
-
 
     Page<PostDto> getPostsByUser(long userId, int pageNumber, int pageSize, Sort sort);
 

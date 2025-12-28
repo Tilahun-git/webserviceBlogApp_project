@@ -53,7 +53,7 @@ public class RoleServiceImpl implements RoleServiceContract {
     @Override
     public RoleDto createRole(RoleDto roleDto) {
         Role role = modelMapper.map(roleDto, Role.class);
-        role.setId(null);
+        role.setId(0);
         Role createdRole = roleRepo.save(role);
         return modelMapper.map(createdRole, RoleDto.class);
     }
