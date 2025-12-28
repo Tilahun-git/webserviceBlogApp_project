@@ -22,8 +22,9 @@ export const signInUser = createAsyncThunk(
     async (data: SigninData, { rejectWithValue }) => {
       try {
         const res = await signInApi(data);
-        localStorage.setItem('token', res.token);
-        return res;
+        // axios responses include the payload under `data`
+        localStorage.setItem('token', res.data.token);
+        return res.data;
       } catch (err: any) {
         return rejectWithValue(err.response?.data?.error ?? 'Login failed');
       }
@@ -67,6 +68,16 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
       }
     },
+    fulfilled: (state, action) => {
+  state.loading = false;
+  state.isAuthenticated = true;
+  state.user = action.payload.user;
+  state.token = action.payload.token;
+  localStorage.setItem('token', action.payload.token);
+   document.cookie = `token=${action.payload.token}; path=/; SameSite=Lax`;
+
+}
+
   },
   extraReducers: (builder) => {
     builder

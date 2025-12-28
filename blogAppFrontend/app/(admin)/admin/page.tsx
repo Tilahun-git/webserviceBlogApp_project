@@ -5,7 +5,6 @@ import DashSidebar from "@/components/AdminDash/DashSidebar";
 import DashPosts from "@/components/AdminDash/DashPosts";
 import DashUsers from "@/components/AdminDash/DashUsers";
 import DashComments from "@/components/AdminDash/DashComments";
-import DashboardComp from "@/components/AdminDash/DashboardComp";
 
 export default function Dashboard() {
   const searchParams = useSearchParams();
@@ -23,7 +22,6 @@ export default function Dashboard() {
         {tab === "posts" && <DashPosts />}
         {tab === "users" && <DashUsers />}
         {tab === "comments" && <DashComments />}
-        {tab === "dash" && <DashboardComp />}
       </div>
     </div>
   );

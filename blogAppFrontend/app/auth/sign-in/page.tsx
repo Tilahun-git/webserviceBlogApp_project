@@ -51,6 +51,25 @@ export default function SignInPage() {
     }
   }, [error]);
 
+  useEffect(() => {
+  dispatch(loadToken());
+}, [dispatch]);
+
+useEffect(() => {
+  if (error) {
+    toast.error(error);
+  }
+}, [error]);
+
+useEffect(() => {
+  if (isAuthenticated) {
+    toast.success('Successfully signed in!');
+    router.replace('/dashboard');
+  }
+}, [isAuthenticated, router]);
+
+
+
   // Show success toast on successful authentication
   useEffect(() => {
     if (isAuthenticated) {
@@ -94,50 +113,60 @@ export default function SignInPage() {
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  e.preventDefault();
 
-    if (!validateForm()) {
-      toast.error('Please fill in all required fields correctly', {
-        position: 'top-right',
-        icon: '⚠️',
-      });
-      setIsSubmitting(false);
-      return;
-    }
+  if (!validateForm()) return;
 
-    try {
-      const resultAction = await dispatch(signInUser(formData));
+  setIsSubmitting(true);
+  await dispatch(signInUser(formData));
+  setIsSubmitting(false);
+};
 
-      if (signInUser.fulfilled.match(resultAction)) {
-        toast.success('Welcome back! Redirecting to dashboard...', {
-          duration: 2000,
-          position: 'top-right',
-          icon: '👋',
-          style: {
-            background: '#f0fdf4',
-            color: '#166534',
-            border: '1px solid #bbf7d0',
-          },
-        });
+  // const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
+  //   setIsSubmitting(true);
 
-        // Small delay to show success message before redirecting
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 1500);
-      } else if (signInUser.rejected.match(resultAction)) {
-        // Error is already handled by Redux and shown via toast in useEffect
-        console.error('Login failed:', resultAction.payload);
-      }
-    } catch (err) {
-      toast.error('An unexpected error occurred. Please try again.', {
-        position: 'top-right',
-        icon: '❌',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  //   if (!validateForm()) {
+  //     toast.error('Please fill in all required fields correctly', {
+  //       position: 'top-right',
+  //       icon: '⚠️',
+  //     });
+  //     setIsSubmitting(false);
+  //     return;
+  //   }
+
+  //   try {
+  //     const resultAction = await dispatch(signInUser(formData));
+
+  //     if (signInUser.fulfilled.match(resultAction)) {
+  //       toast.success('Welcome back! Redirecting to dashboard...', {
+  //         duration: 2000,
+  //         position: 'top-right',
+  //         icon: '👋',
+  //         style: {
+  //           background: '#f0fdf4',
+  //           color: '#166534',
+  //           border: '1px solid #bbf7d0',
+  //         },
+  //       });
+
+  //       // Small delay to show success message before redirecting
+  //       setTimeout(() => {
+  //         router.push('/dashboard');
+  //       }, 1500);
+  //     } else if (signInUser.rejected.match(resultAction)) {
+  //       // Error is already handled by Redux and shown via toast in useEffect
+  //       console.error('Login failed:', resultAction.payload);
+  //     }
+  //   } catch (err) {
+  //     toast.error('An unexpected error occurred. Please try again.', {
+  //       position: 'top-right',
+  //       icon: '❌',
+  //     });
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
 
   const handleBlur = (field: keyof FormDataType) => {
     if (!formData[field] && !formErrors[field]) {
