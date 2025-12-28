@@ -17,6 +17,7 @@ public class PostDto {
     private String content;
     private String mediaType;
     private String mediaUrl;
+    private Integer likeCount;
     private String author;
     private String categoryTitle;
 

@@ -37,8 +37,9 @@ public class Post {
     @Column(name = "media_url")
     private String mediaUrl;
 
+
     @Column
-    private Long likeCount = 0L;
+    private Integer likeCount = 0;
 
 
     @CreationTimestamp

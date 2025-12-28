@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "flowbite-react";
 import { AlertCircle } from "lucide-react";
 import Link from "next/link";
+import PostFormModal from "@/components/PostFormModal";
 
 interface Post {
   _id: string;
@@ -32,6 +33,8 @@ export default function DashPosts() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [page, setPage] = useState<number>(1);
   const [totalPosts, setTotalPosts] = useState<number>(0);
+  const [editOpen, setEditOpen] = useState<boolean>(false);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
   // Fetch posts
   // fetchPosts moved into useEffect to avoid changing dependencies
@@ -39,10 +42,10 @@ export default function DashPosts() {
   useEffect(() => {
     const fetchPosts = async (page: number) => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/post/getposts?userId=${currentUser?._id}&page=${page}&limit=${PAGE_SIZE}`,
-          { credentials: "include" }
-        );
+        const url = currentUser?.isAdmin
+          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/post/getposts?page=${page}&limit=${PAGE_SIZE}`
+          : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/post/getposts?userId=${currentUser?._id}&page=${page}&limit=${PAGE_SIZE}`;
+        const res = await fetch(url, { credentials: "include" });
         const data = await res.json();
         if (res.ok) {
           setPosts(data.posts);
@@ -62,11 +65,47 @@ export default function DashPosts() {
     }
   }, [currentUser?._id, currentUser?.isAdmin, page]);
 
+  const openEdit = (post: Post) => {
+    setSelectedPost(post);
+    setEditOpen(true);
+  };
+
+  const handleSaveEdit = async (data: Partial<Post>) => {
+    if (!selectedPost) return;
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/post/updatepost/${selectedPost._id}/${currentUser?._id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+          credentials: "include",
+        }
+      );
+      const updatedPost = await res.json();
+      if (res.ok) {
+        setPosts((prev) =>
+          prev.map((p) => (p._id === updatedPost._id ? updatedPost : p))
+        );
+        setEditOpen(false);
+        setSelectedPost(null);
+      } else {
+        console.error(updatedPost.message);
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(error.message);
+      } else {
+        console.error(String(error) || "Error updating post");
+      }
+    }
+  };
+
   // Delete post
   const handleDeletePost = async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/post/deletepost/${postIdToDelete}/${currentUser?._id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/post/deletepost/${postIdToDelete}`,
         { method: "DELETE", credentials: "include" }
       );
       const data = await res.json();
@@ -175,17 +214,28 @@ export default function DashPosts() {
                 </span>
               </td>
               <td>
-                <Link
-                  href={`/update-post/${post._id}`}
-                  className="text-teal-500 hover:underline"
+                <span
+                  onClick={() => openEdit(post)}
+                  className="font-medium text-blue-500 hover:underline cursor-pointer"
                 >
                   Edit
-                </Link>
+                </span>
               </td>
             </tr>
           ))}
         </tbody>
       </Table>
+
+      {/* Edit Post Modal */}
+      <PostFormModal
+        post={selectedPost}
+        open={editOpen}
+        onClose={() => {
+          setEditOpen(false);
+          setSelectedPost(null);
+        }}
+        onSave={handleSaveEdit}
+      />
 
       {/* Delete Confirmation Modal */}
       <Modal show={showModal} onClose={() => setShowModal(false)} size="md">

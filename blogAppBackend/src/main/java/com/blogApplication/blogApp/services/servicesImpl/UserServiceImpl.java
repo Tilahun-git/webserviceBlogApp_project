@@ -50,16 +50,18 @@ public class UserServiceImpl implements UserServiceContract {
     }
 
     @Override
-    public List<UserResponseDto> getAllUsers() {
-        List<User> users = userRepo.findAll();
-        if(users.isEmpty()){
-            throw new ResourceNotFoundException("User",": there is no any user",null);
-        }
-        return users.stream().map(user -> modelMapper.map(user, UserResponseDto.class))
-                .collect(Collectors.toList());
+    public Page<UserResponseDto> getAllUsers(
+            int pageNumber,
+            int pageSize,
+            Sort sort
+    ) {
 
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+
+        Page<User> userPage = userRepo.findAll(pageable);
+
+        return userPage.map(user -> modelMapper.map(user, UserResponseDto.class));
     }
-
 
     @Override
     public UserResponseDto registerUser(RegisterRequestDto userDto, MultipartFile profileMedia) {
@@ -90,9 +92,9 @@ public class UserServiceImpl implements UserServiceContract {
 
     @Override
     public UserResponseDto activateAndDeActiveUser(long id) {
-        User user = userRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("User","id", id));
+        User user = userRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 
-        if(user.isActive())
+        if (user.isActive())
             user.setActive(false);
         else
             user.setActive(true);
@@ -104,92 +106,25 @@ public class UserServiceImpl implements UserServiceContract {
     }
 
     @Override
-    public Page<UserResponseDto> getAllUsers(
-            int pageNumber,
-            int pageSize,
-            Sort sort
-    ) {
+        public Page<UserResponseDto> searchUsers (
+                String keyword,
+        int pageNumber,
+        int pageSize,
+        Sort sort
+    ){
+
+            Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+
+            Page<User> userPage =
+                    userRepo.findByUsernameContainingIgnoreCaseOrFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
+                            keyword,
+                            keyword,
+                            keyword,
+                            pageable
+                    );
+
+            return userPage.map(user -> modelMapper.map(user, UserResponseDto.class));
+        }
 
 
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-
-        Page<User> userPage = userRepo.findAll(pageable);
-
-        return userPage.map(user -> modelMapper.map(user, UserResponseDto.class));
     }
-
-    @Override
-    public Page<UserResponseDto> searchUsers(
-            String keyword,
-            int pageNumber,
-            int pageSize,
-            Sort sort
-    ) {
-
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-
-        Page<User> userPage =
-                userRepo.findByUsernameContainingIgnoreCaseOrFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
-                        keyword,
-                        keyword,
-                        keyword,
-                        pageable
-                );
-
-        return userPage.map(user -> modelMapper.map(user, UserResponseDto.class));
-    }
-
-
-//    // =============== NEW METHODS FOR ACTIVITY TRACKING ===============
-//
-//    /**
-//     * Update user's last activity timestamp
-//     * Called when user logs in or makes any authenticated request
-//     */
-//    public void updateUserActivity(String username) {
-//        Optional<User> userOptional = userRepo.findByUsername(username);
-//        if (userOptional.isPresent()) {
-//            User user = userOptional.get();
-//            user.setLastActivity(LocalDateTime.now());
-//            user.setActive(true); // Ensure user is active when they're active
-//            userRepo.save(user);
-//        }
-//    }
-//
-//    /**
-//     * Deactivate a specific user
-//     * Called when token expires or manually by admin
-//     */
-//    public void deactivateUser(String username) {
-//        Optional<User> userOptional = userRepo.findByUsername(username);
-//        if (userOptional.isPresent()) {
-//            User user = userOptional.get();
-//            user.setActive(false);
-//            userRepo.save(user);
-//        }
-//    }
-//
-//    /**
-//     * Check if a user is active
-//     */
-//    public boolean isUserActive(String username) {
-//        return userRepo.findByUsername(username)
-//                .map(User::isActive)
-//                .orElse(false);
-//    }
-//
-//    /**
-//     * Activate a user (e.g., on successful login)
-//     */
-//    public void activateUser(String username) {
-//        Optional<User> userOptional = userRepo.findByUsername(username);
-//        if (userOptional.isPresent()) {
-//            User user = userOptional.get();
-//            user.setActive(true);
-//            user.setLastActivity(LocalDateTime.now());
-//            userRepo.save(user);
-//        }
-//    }
-
-
-}

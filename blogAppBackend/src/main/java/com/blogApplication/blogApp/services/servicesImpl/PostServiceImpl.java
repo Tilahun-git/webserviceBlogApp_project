@@ -2,10 +2,12 @@ package com.blogApplication.blogApp.services.servicesImpl;
 
 import com.blogApplication.blogApp.dto.postDto.PostDto;
 import com.blogApplication.blogApp.entities.Category;
+import com.blogApplication.blogApp.entities.Like;
 import com.blogApplication.blogApp.entities.Post;
 import com.blogApplication.blogApp.entities.User;
 import com.blogApplication.blogApp.exceptions.ResourceNotFoundException;
 import com.blogApplication.blogApp.repositories.CategoryRepo;
+import com.blogApplication.blogApp.repositories.LikeRepo;
 import com.blogApplication.blogApp.repositories.PostRepo;
 import com.blogApplication.blogApp.repositories.UserRepo;
 import com.blogApplication.blogApp.services.servicesContract.PostServiceContract;
@@ -17,32 +19,21 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class PostServiceImpl implements PostServiceContract {
 
-    private final PostRepo postRepo;
+public class PostServiceImpl implements PostServiceContract {
+    private  final PostRepo postRepo;
     private final UserRepo userRepo;
+    private final LikeRepo likeRepo;
     private final CategoryRepo categoryRepo;
     private final ModelMapper modelMapper;
     private final CloudinaryMediaServiceImpl cloudinaryMediaService; // Changed to Media service
 
-    @Override
-    public List<PostDto> getAllPosts() {
-        List<Post> posts = postRepo.findAll();
 
-        if (posts.isEmpty()) {
-            throw new ResourceNotFoundException("Post", "There is no post found", null);
-        }
-
-        return posts.stream()
-                .map(this::mapToPostDto)
-                .toList();
-    }
 
 
     @Override
@@ -50,6 +41,10 @@ public class PostServiceImpl implements PostServiceContract {
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
         Page<Post> posts = postRepo.findAll(pageable);
 
+
+        if (posts.isEmpty()) {
+            throw new ResourceNotFoundException("Post", "There is no post found", null);
+        }
         return posts.map(this::mapToPostDto);
     }
 
@@ -76,6 +71,7 @@ public class PostServiceImpl implements PostServiceContract {
         String mediaUrl = cloudinaryMediaService.uploadMedia(mediaFile);
         post.setMediaUrl(mediaUrl); // Store Cloudinary URL
         post.setMediaType(mediaFile.getContentType());
+
 
         Post savedPost = postRepo.save(post);
         return mapToPostDto(savedPost);
@@ -105,6 +101,7 @@ public class PostServiceImpl implements PostServiceContract {
 
         Post updatedPost = postRepo.save(existingPost);
         return mapToPostDto(updatedPost);
+
     }
 
     @Override
@@ -121,6 +118,41 @@ public class PostServiceImpl implements PostServiceContract {
         return mapToPostDto(deletedPost);
     }
 
+
+
+
+
+
+    //toggle like of specific post
+    public boolean toggleLike(long postId, long userId) {
+        Post post = postRepo.findById(postId)
+                .orElseThrow(() -> new ResourceNotFoundException("Post","postId",postId));
+
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        var existingLike = likeRepo.findByPostAndUser(post, user);
+
+        if (existingLike.isPresent()) {
+            likeRepo.delete(existingLike.get());
+            post.setLikeCount(post.getLikeCount() - 1);
+            postRepo.save(post);
+            return false; // now unliked
+        } else {
+            Like like = new Like();
+            like.setPost(post);
+            like.setUser(user);
+            likeRepo.save(like);
+
+            post.setLikeCount(post.getLikeCount() + 1);
+            postRepo.save(post);
+            return true; // now liked
+        }
+    }
+
+
+    // method to get all posts in authored by a certain user
+
     @Override
     public Page<PostDto> getPostsByUser(long userId, int pageNumber, int pageSize, Sort sort) {
         User user = userRepo.findById(userId)
@@ -134,24 +166,40 @@ public class PostServiceImpl implements PostServiceContract {
 
     @Override
     public Page<PostDto> getPostsByCategory(long categoryId, int pageNumber, int pageSize, Sort sort) {
+
+        modelMapper.typeMap(Post.class, PostDto.class).addMappings(mapper -> {
+            mapper.map(src -> src.getAuthor().getUsername(), PostDto::setAuthor);
+            mapper.map(src -> src.getCategory().getTitle(), PostDto::setCategoryTitle);
+        });
         Category category = categoryRepo.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", categoryId));
-
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
         Page<Post> postsByCat = postRepo.findAllByCategory(category, pageable);
 
         return postsByCat.map(this::mapToPostDto);
     }
 
+    // method to search posts using keyword
+
     @Override
     public Page<PostDto> searchPosts(String keyword, int pageNumber, int pageSize, Sort sort) {
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
 
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
         Page<Post> searchedPosts = postRepo
                 .findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(
                         keyword, keyword, pageable);
 
+        if (searchedPosts.isEmpty()) {
+            throw new ResourceNotFoundException(
+                    "Post",
+                    "There is no post found",
+                    null
+            );
+        }
         return searchedPosts.map(this::mapToPostDto);
+
+
     }
 
 
@@ -165,4 +213,6 @@ public class PostServiceImpl implements PostServiceContract {
 
         return dto;
     }
+
 }
+

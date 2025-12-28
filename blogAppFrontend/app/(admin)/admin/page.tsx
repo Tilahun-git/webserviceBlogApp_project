@@ -1,11 +1,11 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import DashSidebar from "@/components/DashSidebar";
-import DashPosts from "@/components/DashPosts";
-import DashUsers from "@/components/DashUsers";
-import DashComments from "@/components/DashComments";
-import DashboardComp from "@/components/DashboardComp";
+import DashSidebar from "@/components/AdminDash/DashSidebar";
+import DashPosts from "@/components/AdminDash/DashPosts";
+import DashUsers from "@/components/AdminDash/DashUsers";
+import DashComments from "@/components/AdminDash/DashComments";
+import DashboardComp from "@/components/AdminDash/DashboardComp";
 
 export default function Dashboard() {
   const searchParams = useSearchParams();

@@ -13,7 +13,6 @@ public interface UserServiceContract {
 
 
     UserResponseDto getUser(long id);
-    List<UserResponseDto> getAllUsers();
     UserResponseDto registerUser(RegisterRequestDto userDto, MultipartFile profileMedia);
     UserUpdateDto updateUser(UserUpdateDto userDto, long id, MultipartFile profileMedia);
     UserResponseDto activateAndDeActiveUser(long id);

@@ -28,6 +28,10 @@ public class User {
     private String firstName;
 
     @Column
+
+    private String profilePicture; // <-- add this field
+
+    @Column
     private String lastName;
 
     @Column(unique = true)

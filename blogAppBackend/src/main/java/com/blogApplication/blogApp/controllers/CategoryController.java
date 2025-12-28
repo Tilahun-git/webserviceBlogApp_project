@@ -22,7 +22,7 @@ public class CategoryController {
     private final CategoryServiceImpl categoryServiceImpl;
 
     // GET TO RETRIEVE ALL CATEGORIES
-    @GetMapping("/categories-list")
+    @GetMapping("/list")
     public List<CategoryDto> getAllCategories() {
         return categoryServiceImpl.getAllCategories();
     }

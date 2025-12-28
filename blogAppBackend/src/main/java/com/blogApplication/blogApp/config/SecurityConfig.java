@@ -6,6 +6,7 @@ import com.blogApplication.blogApp.auths.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
@@ -25,40 +26,9 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//
-//        http
-//                .csrf(csrf -> csrf.disable())
-//                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/api/auth/**").permitAll() // login & register
-//                        .requestMatchers("/api/users/user/**").permitAll()
-//                        .requestMatchers("/api/users/admin/**").hasRole("ADMIN")
-//                        .anyRequest().authenticated()
-//                )
-//                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-//
-//        return http.build();
-//    }
-
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        http
-//                .csrf(csrf -> csrf.disable()) // Disable CSRF for your API
-//                .cors(Customizer.withDefaults()) // MUST HAVE THIS
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Explicitly permit all OPTIONS
-//                        .requestMatchers("/api/users/user/register").permitAll()
-//                        .requestMatchers("/api/auth/login").permitAll()
-////                        .requestMatchers("/api/**").permitAll()
-//                        .anyRequest().authenticated()
-//                );
-//        return http.build();
-//    }
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults()) // Enable CORS properly
@@ -67,13 +37,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow CORS preflight
                         .requestMatchers("/api/users/user/register").permitAll()
                         .requestMatchers("/api/auth/**").permitAll() // Allow all auth endpoints
-//                        .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll() // Public read access
-//                        .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll() // Public read access
+                        .requestMatchers("/api/**").permitAll()
 //                        .requestMatchers("/api/users/admin/**").hasRole("ADMIN") // Admin-only endpoints
                         .anyRequest().authenticated() // Everything else requires authentication
                 )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter
-
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

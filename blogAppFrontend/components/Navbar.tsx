@@ -63,11 +63,6 @@ export default function Navigation() {
                 {item.name}
               </Link>
             ))}
-            <Link href="/admin">
-              <Button size="sm" variant="outline">
-                Dashboard
-              </Button>
-            </Link>
             <div className="hidden md:flex items-center space-x-2">
               <Button
                 variant="ghost"

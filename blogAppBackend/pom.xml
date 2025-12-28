@@ -93,7 +93,7 @@
             <scope>test</scope>
         </dependency>
 
-<!--        cloudinary -->
+        <!--        cloudinary -->
         <dependency>
             <groupId>com.cloudinary</groupId>
             <artifactId>cloudinary-http44</artifactId>
