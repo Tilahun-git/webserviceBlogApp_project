@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class UserController {
     @Autowired
@@ -33,7 +33,7 @@ public class UserController {
 
     // POST METHOD TO ADD NEW USER
 
-    @PostMapping("/user/register")
+    @PostMapping("/sign-up")
     public ResponseEntity<UserResponseDto> registerUser(@RequestBody RegisterRequestDto userDto) {
 
         return new ResponseEntity<>(userService.registerUser(userDto), HttpStatus.CREATED);
