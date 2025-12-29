@@ -23,8 +23,26 @@ The Blogging Application is a multi-user, full-stack Java Spring Boot applicatio
 git clone https://github.com/Tilahun-git/webserviceBlogApp_project.git
 ```
 ## 3️⃣ Configure Database
+* PostgreSQL
 ```bash
 CREATE DATABASE blog_db;
+```
+## 4️⃣ Build the Project
+```bash
+mvn clean install
+```
+## 5️⃣ Run the Application
+```bash
+mvn spring-boot:run
+```
+## 6️⃣ Access the Application
+* Backend API: http://localhost:8080
+* Swagger UI: http://localhost:8080/swagger-ui.html
+* OpenAPI JSON: http://localhost:8080/v3/api-docs
+  
+
+
+
 
 
 
