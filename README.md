@@ -11,17 +11,17 @@ The Blogging Application is a multi-user, full-stack Java Spring Boot applicatio
 * Security: Role-based authorization
 * Frontend (optional): Next.js (Admin Dashboard & Blog UI)
 # ⚙️ Getting Started
-## 1️⃣ Prerequisites
+*1️⃣ Prerequisites
 * Make sure you have the following installed:
 * Java JDK 17+
 * Maven 3.8+
 * MySQL or PostgreSQL
 * Git
 * IDE (IntelliJ IDEA, Eclipse, or VS Code recommended)
-## 2️⃣ Clone the Repository
+* * 2️⃣ Clone the Repository
 ```bash
 git clone https://github.com/Tilahun-git/webserviceBlogApp_project.git
-## 3️⃣ Configure Database
+*3️⃣ Configure Database
 
 
 
