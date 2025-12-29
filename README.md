@@ -12,7 +12,7 @@ The Blogging Application is a multi-user, full-stack Java Spring Boot applicatio
 * Frontend (optional): Next.js (Admin Dashboard & Blog UI)
 # ⚙️ Getting Started
 * 1️⃣ Prerequisites
-- Make sure you have the following installed:
+## Make sure you have the following installed:
 * Java JDK 17+
 * Maven 3.8+
 * MySQL or PostgreSQL
