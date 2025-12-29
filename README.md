@@ -25,5 +25,9 @@ The Blogging Application is a multi-user, full-stack Java Spring Boot applicatio
 ## 4️⃣ Build the Project
 * mvn clean install
 ## 5️⃣ Run the Application
-* mvn spring-boot:run
+```bash
+git clone https://github.com/your-username/blog-admin-dashboard.git
+cd blog-admin-dashboard
+mvn clean install
+
 
