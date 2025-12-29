@@ -21,15 +21,7 @@ The Blogging Application is a multi-user, full-stack Java Spring Boot applicatio
 ## 2️⃣ Clone the Repository
 ```bash
 git clone https://github.com/Tilahun-git/webserviceBlogApp_project.git
-
 ## 3️⃣ Configure Database
-
-### 🔹 Create Database
-
-**MySQL**
-
-```sql
-CREATE DATABASE blog_db;
 
 
 
