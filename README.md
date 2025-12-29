@@ -5,3 +5,8 @@ The Blogging Application is a multi-user, full-stack Java Spring Boot applicatio
 ![home](https://github.com/user-attachments/assets/3c670ab6-f883-43b0-bc72-624ef3189392)
 # ER Diagram
 ![home](https://github.com/user-attachments/assets/272ab951-12c0-4383-a2f0-294662a6f301)
+# 📚 Tech Stacks
+Backend: Java, Spring Boot, JPA/Hibernate
+Database: PostgreSQL
+Security: Role-based authorization
+Frontend (optional): Next.js (Admin Dashboard & Blog UI)
