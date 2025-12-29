@@ -1,6 +1,6 @@
 # webserviceBlogApp_project
 # Introduction
-The Blogging Application is a multi-user, full-stack Java Spring Boot application with Next js. Built with Spring Boot, Spring Data JPA, and Hibernate, it includes role-based authentication, user management, post and category management, commenting, and like functionality. The application leverages RESTful APIs for frontend integration and supports secure, scalable interactions between Users, Roles, Categories, Posts, Comments, and Likes.
+The Blogging Application is a multi-user, full-stack Java Spring Boot application with Next js,Spring Data JPA, and Hibernate, it includes role-based authentication, user management, post and category management, commenting, and like functionality. The application leverages RESTful APIs for frontend integration and supports secure, scalable interactions between Users, Roles, Categories, Posts, Comments, and Likes.
 # Frontend
 ![home](https://github.com/user-attachments/assets/3c670ab6-f883-43b0-bc72-624ef3189392)
 # ER Diagram
@@ -22,3 +22,8 @@ The Blogging Application is a multi-user, full-stack Java Spring Boot applicatio
 * git clone https://github.com/Tilahun-git/webserviceBlogApp_project.git
 ## 3️⃣ Configure Database
 * PostgreSQL:CREATE DATABASE blog_db;
+## 4️⃣ Build the Project
+* mvn clean install
+## 5️⃣ Run the Application
+* mvn spring-boot:run
+
