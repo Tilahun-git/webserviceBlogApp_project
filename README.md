@@ -19,7 +19,10 @@ The Blogging Application is a multi-user, full-stack Java Spring Boot applicatio
 * Git
 * IDE (IntelliJ IDEA, Eclipse, or VS Code recommended)
 ## 2️⃣ Clone the Repository
-```bash
-git clone https://github.com/Tilahun-git/webserviceBlogApp_project.git
+# Block 1
+git clone https://github.com/your-username/blog-admin-dashboard.git
+cd blog-admin-dashboard
+
+
 
 
