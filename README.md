@@ -10,6 +10,127 @@ The Blogging Application is a multi-user, full-stack Java Spring Boot applicatio
 * Database: PostgreSQL
 * Security: Role-based authorization
 * Frontend: Next.js (Admin Dashboard & Blog UI)
+## Folder Structure for Frontend blog website
+```
+└── 📁app
+    └── 📁(admin)
+        └── 📁admin
+            └── 📁posts
+                ├── page.tsx
+            └── 📁settings
+                ├── page.tsx
+            └── 📁users
+                ├── page.tsx
+            ├── layout.tsx
+            ├── page.tsx
+    └── 📁(user)
+        └── 📁dashboard
+            ├── layout.tsx
+            ├── page.tsx
+    └── 📁about
+        ├── page.tsx
+    └── 📁auth
+        └── 📁sign-in
+            ├── page.tsx
+        └── 📁sign-up
+            ├── page.tsx
+    └── 📁blog
+        └── 📁[id]
+            ├── page.tsx
+        ├── page.tsx
+    └── 📁contact
+        ├── page.tsx
+    └── 📁posts
+        └── 📁[id]
+            ├── page.tsx
+    ├── favicon.ico
+    ├── globals.css
+    ├── layout.tsx
+    └── page.tsx
+```
+```
+└── 📁components
+    └── 📁AdminDash
+        ├── AdminHeader.tsx
+        ├── Dashboard.tsx
+        ├── DashPosts.tsx
+        ├── DashSidebar.tsx
+        ├── DashUsers.tsx
+    └── 📁ui
+        ├── alert-dialog.tsx
+        ├── alert.tsx
+        ├── avatar.tsx
+        ├── badge.tsx
+        ├── button.tsx
+        ├── card.tsx
+        ├── input.tsx
+        ├── label.tsx
+        ├── scroll-area.tsx
+        ├── select.tsx
+        ├── separator.tsx
+        ├── sheet.tsx
+        ├── sidebar.tsx
+        ├── skeleton.tsx
+        ├── sonner.tsx
+        ├── spinner.tsx
+        ├── switch.tsx
+        ├── table.tsx
+        ├── textarea.tsx
+        ├── tooltip.tsx
+    └── 📁UserDashboard
+        ├── CreatePost.tsx
+        ├── MyPosts.tsx
+        ├── UserHeader.tsx
+        ├── UserProfile.tsx
+        ├── UserSidebar.tsx
+    ├── Comment.tsx
+    ├── CommentSection.tsx
+    ├── Features.tsx
+    ├── Footer.tsx
+    ├── HeroSection.tsx
+    ├── LayoutClient.tsx
+    ├── MobileNavigation.tsx
+    ├── Navbar.tsx
+    ├── PostCard.tsx
+    ├── provider.tsx
+    ├── ThemeProvider.tsx
+    └── ThemeToggle.tsx
+```
+```
+└── 📁hooks
+    └── use-mobile.ts
+```
+```
+└── 📁lib
+    └── 📁adapters
+        ├── postAdapter.ts
+    ├── api.ts
+    ├── constants.ts
+    ├── data.ts
+    └── utils.ts
+```
+```
+└── 📁redux
+    └── 📁auth
+        ├── authSlice.ts
+        ├── userSlice.ts
+    └── store.ts
+```
+```
+   ├── .env.local
+    ├── .gitignore
+    ├── BACKEND_INTEGRATION_GUIDE.md
+    ├── components.json
+    ├── eslint.config.mjs
+    ├── middleware.ts
+    ├── next-env.d.ts
+    ├── next.config.ts
+    ├── package-lock.json
+    ├── package.json
+    ├── postcss.config.mjs
+    ├── README.md
+    └── tsconfig.json
+
 # ⚙️ Getting Started
 ## 1️⃣ Prerequisites
 * Make sure you have the following installed:
@@ -37,9 +158,7 @@ mvn spring-boot:run
 ```
 ## 6️⃣ Access the Application
 * Backend API: http://localhost:8080
-* Swagger UI: http://localhost:8080/swagger-ui.html
-* OpenAPI JSON: http://localhost:8080/v3/api-docs 
-  
+
 
 
 
