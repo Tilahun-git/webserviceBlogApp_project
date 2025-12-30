@@ -10,6 +10,33 @@ The Blogging Application is a multi-user, full-stack Java Spring Boot applicatio
 * Database: PostgreSQL
 * Security: Role-based authorization
 * Frontend: Next.js (Admin Dashboard & Blog UI)
+# ⚙️ Getting Started
+## 1️⃣ Prerequisites
+* Make sure you have the following installed:
+* Java JDK 17+
+* Maven 3.8+
+* MySQL or PostgreSQL
+* Git
+* IDE (IntelliJ IDEA, Eclipse, or VS Code recommended)
+## 2️⃣ Clone the Repository
+```bash
+git clone https://github.com/Tilahun-git/webserviceBlogApp_project.git
+```
+## 3️⃣ Configure Database
+* PostgreSQL
+```bash
+CREATE DATABASE blog_db;
+```
+## 4️⃣ Build the Project
+```bash
+mvn clean install
+```
+## 5️⃣ Run the Application
+```bash
+mvn spring-boot:run
+```
+## 6️⃣ Access the Application
+* Backend API: http://localhost:8080
 ## Folder Structure for Frontend blog website
 ```
 └── 📁app
@@ -47,8 +74,7 @@ The Blogging Application is a multi-user, full-stack Java Spring Boot applicatio
     ├── globals.css
     ├── layout.tsx
     └── page.tsx
-```
-```
+
 └── 📁components
     └── 📁AdminDash
         ├── AdminHeader.tsx
@@ -95,12 +121,10 @@ The Blogging Application is a multi-user, full-stack Java Spring Boot applicatio
     ├── provider.tsx
     ├── ThemeProvider.tsx
     └── ThemeToggle.tsx
-```
-```
+
 └── 📁hooks
     └── use-mobile.ts
-```
-```
+
 └── 📁lib
     └── 📁adapters
         ├── postAdapter.ts
@@ -108,15 +132,13 @@ The Blogging Application is a multi-user, full-stack Java Spring Boot applicatio
     ├── constants.ts
     ├── data.ts
     └── utils.ts
-```
-```
+
 └── 📁redux
     └── 📁auth
         ├── authSlice.ts
         ├── userSlice.ts
     └── store.ts
-```
-```
+
    ├── .env.local
     ├── .gitignore
     ├── BACKEND_INTEGRATION_GUIDE.md
@@ -130,34 +152,6 @@ The Blogging Application is a multi-user, full-stack Java Spring Boot applicatio
     ├── postcss.config.mjs
     ├── README.md
     └── tsconfig.json
-
-# ⚙️ Getting Started
-## 1️⃣ Prerequisites
-* Make sure you have the following installed:
-* Java JDK 17+
-* Maven 3.8+
-* MySQL or PostgreSQL
-* Git
-* IDE (IntelliJ IDEA, Eclipse, or VS Code recommended)
-## 2️⃣ Clone the Repository
-```bash
-git clone https://github.com/Tilahun-git/webserviceBlogApp_project.git
-```
-## 3️⃣ Configure Database
-* PostgreSQL
-```bash
-CREATE DATABASE blog_db;
-```
-## 4️⃣ Build the Project
-```bash
-mvn clean install
-```
-## 5️⃣ Run the Application
-```bash
-mvn spring-boot:run
-```
-## 6️⃣ Access the Application
-* Backend API: http://localhost:8080
 
 
 
