@@ -1,30 +1,30 @@
+import { NextRequest, NextResponse } from "next/server";
 
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+export function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
 
-export function middleware(request: NextRequest) {
-  // 1. Get the token from cookies
-  const token = request.cookies.get('token')?.value;
-  const { pathname } = request.nextUrl;
+  // Read cookies (middleware can ONLY read cookies)
+  const token = req.cookies.get("authToken")?.value;
+  const role = req.cookies.get("userRole")?.value;
 
-  // 2. Define your protected dashboard routes
-  const isDashboardRoute = pathname.startsWith('/dashboard');
-  const isAuthRoute = pathname.startsWith('/auth');
+  const isAdmin = role === "ADMIN" || role === "admin";
 
-  // Logic: If trying to access dashboard but NO token exists
-  if (isDashboardRoute && !token) {
-    return NextResponse.redirect(new URL('/auth/sign-up', request.url));
+  // Allow access to sign-in page always
+  if (pathname.startsWith("/auth/sign-in")) {
+    return NextResponse.next();
   }
 
-  // Logic: If user is ALREADY logged in, don't let them go back to sign-up/login
-  if (isAuthRoute && token) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
+  // Protect admin routes
+  // if (pathname.startsWith("/admin")) {
+  //   if (!token || !isAdmin) {
+  //     const loginUrl = new URL("/auth/sign-in", req.url);
+  //     return NextResponse.redirect(loginUrl);
+  //   }
+  // }
 
   return NextResponse.next();
 }
 
-// 3. Matcher config: Only run middleware on dashboard and auth pages
 export const config = {
-  matcher: ['/dashboard/:path*', '/auth/:path*'],
+  matcher: ["/admin/:path*"],
 };

@@ -1,14 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { motion, Variants } from "framer-motion";
 import Link from "next/link";
 
 /* ======================
    Animation Variants
 ====================== */
-const AUTHOR_NAME = "Tibebu Dereje";
-
 const container: Variants = {
   hidden: { opacity: 0 },
   show: {
@@ -37,6 +34,14 @@ const fadeUp: Variants = {
 ====================== */
 
 export default function AboutPage() {
+  const teamMembers = [
+    { name: "Tibebu Dereje", role: "Frontend Developer" },
+    { name: "Elias Nuredin", role: "Backend Developer" },
+    { name: "Elias Ferhan", role: "Frontend Developer" },
+    { name: "Tilahun Tareke", role: "Full Stack Developer" },
+    { name: "Eyob Abate", role: "Backend Developer" },
+  ];
+
   return (
     <motion.main
       variants={container}
@@ -50,114 +55,92 @@ export default function AboutPage() {
         className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold tracking-tight
                    text-foreground text-center mb-14"
       >
-        About This Blog
+        About Our Blog
       </motion.h1>
 
       {/* ================= Intro ================= */}
       <motion.section variants={fadeUp} className="text-center mb-16">
-        <p
-          className="text-xl md:text-2xl text-muted-foreground leading-relaxed
-                      max-w-2xl mx-auto mb-6"
-        >
-          Welcome to{" "}
-          <span className="text-foreground font-semibold">My Blog</span> — a
-          modern space for high-quality tutorials, practical guides, and deep
-          insights into web development and software engineering.
+        <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-6">
+          Welcome to <span className="text-foreground font-semibold">Our Group Blog</span> — 
+          a collaborative platform created by a team of 5 passionate developers and tech enthusiasts.
         </p>
-
         <p className="text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto">
-          Our goal is to help developers grow confidently and stay ahead in the
-          rapidly evolving tech ecosystem.
+          Our goal is to share practical tutorials, insights, and projects that help developers of all levels grow their skills and stay up-to-date with modern web development technologies.
         </p>
       </motion.section>
 
-      {/* ================= Author ================= */}
-      <motion.section
-        variants={fadeUp}
-        className="flex flex-col md:flex-row items-center gap-12 mb-20">
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          transition={{ type: "spring", stiffness: 200 }}
-          className="md:w-1/3 flex justify-center">
-          <Image
-            src="/image/user-image.png"
-            alt="Author"
-            width={250}
-            height={200}
-            priority
-            sizes="(max-width: 768px) 160px, 200px"
-            className=" shadow-xl ring-1 ring-border dark:ring-white/10"/>
-        </motion.div>
-        <div className="md:w-2/3">
-          <h2 className="text-3xl font-semibold text-foreground mb-4">
-            About Me
-          </h2>
-          <p className="text-muted-foreground leading-relaxed mb-3">
-            Hi, I’m{" "}
-            <span className="text-foreground font-medium">{AUTHOR_NAME}</span>,
-            a full-stack developer focused on building scalable, maintainable,
-            and user-centric web applications.
-          </p>
+      {/* ================= Our Mission ================= */}
+      <motion.section variants={fadeUp} className="text-center mb-20">
+        <h2 className="text-3xl font-semibold text-foreground mb-4">Our Mission</h2>
+        <p className="text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+          As a team, we aim to simplify complex topics, provide real-world coding examples, and foster a collaborative learning community. By combining our diverse skills and experiences, we create content that’s practical, reliable, and engaging for readers.
+        </p>
+      </motion.section>
 
-          <p className="text-muted-foreground leading-relaxed">
-            I work with Next.js, React, Node.js, Tailwind CSS, PostgreSQL,
-            MongoDB, and cloud-native tools. This blog is my platform to share
-            real-world experience and practical knowledge.
-          </p>
+      {/* ================= Interactive Team Section ================= */}
+      <motion.section variants={fadeUp} className="mb-20">
+        <h2 className="text-3xl font-semibold text-foreground text-center mb-10">Meet the Team</h2>
+
+        <div className="grid md:grid-cols-5 gap-6 justify-items-center">
+          {teamMembers.map((member, i) => (
+            <motion.div
+              key={i}
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="w-36 h-36 flex flex-col items-center justify-center 
+                         rounded-xl border border-border bg-background shadow-md
+                         dark:bg-background/60 dark:shadow-[0_0_20px_rgba(59,130,246,0.08)]
+                         cursor-pointer relative group"
+            >
+              {/* Initials Circle */}
+              <div className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center text-white text-xl font-bold mb-3">
+                {member.name.split(" ").map(n => n[0]).join("")}
+              </div>
+
+              {/* Name */}
+              <h3 className="text-center text-foreground font-semibold">{member.name}</h3>
+
+              {/* Role Tooltip */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                whileHover={{ opacity: 1, y: 0 }}
+                className="absolute bottom-[-3rem] w-32 bg-gray-800 text-white text-sm text-center rounded-md px-2 py-1
+                           opacity-0 group-hover:opacity-100 transition-all pointer-events-none"
+              >
+                {member.role}
+              </motion.div>
+            </motion.div>
+          ))}
         </div>
       </motion.section>
 
       {/* ================= Features ================= */}
-      <motion.section
-        variants={container}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true }}
-        className="mb-20">
+      <motion.section variants={container} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-20">
         <motion.h2
           variants={fadeUp}
-          className="text-3xl font-semibold
-                     text-foreground text-center mb-10">
+          className="text-3xl font-semibold text-foreground text-center mb-10"
+        >
           What You’ll Find Here
         </motion.h2>
 
         <div className="grid md:grid-cols-2 gap-8">
           {[
-            {
-              icon: "📘",
-              title: "High-Quality Tutorials",
-              desc: "Clear, structured guides from basics to advanced topics.",
-            },
-            {
-              icon: "🚀",
-              title: "Modern Tech Insights",
-              desc: "Best practices, tools, and trends used in real projects.",
-            },
-            {
-              icon: "📱",
-              title: "Fully Responsive",
-              desc: "A smooth reading experience on all devices.",
-            },
-            {
-              icon: "🤝",
-              title: "Community Driven",
-              desc: "Learn, share, and grow together with other developers.",
-            },
+            { icon: "📘", title: "Comprehensive Tutorials", desc: "From fundamentals to advanced topics, explained clearly." },
+            { icon: "💡", title: "Team Insights", desc: "Practical tips and real-world approaches shared by our team." },
+            { icon: "⚡", title: "Collaborative Projects", desc: "Learn by exploring projects developed collectively by our group." },
+            { icon: "🌐", title: "Community Engagement", desc: "Connect, discuss, and grow with fellow learners and developers." },
           ].map((item, i) => (
             <motion.div
               key={i}
               variants={fadeUp}
               whileHover={{ y: -6 }}
               transition={{ duration: 0.3 }}
-              className="rounded-xl border border-border  bg-background p-6 shadow-sm hover:shadow-lg
+              className="rounded-xl border border-border bg-background p-6 shadow-sm hover:shadow-lg
                          transition dark:bg-background/60 dark:shadow-[0_0_40px_rgba(59,130,246,0.08)]"
             >
               <h3 className="text-lg font-semibold text-foreground mb-2">
                 {item.icon} {item.title}
               </h3>
-              <p className="text-muted-foreground leading-relaxed">
-                {item.desc}
-              </p>
+              <p className="text-muted-foreground leading-relaxed">{item.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -165,20 +148,16 @@ export default function AboutPage() {
 
       {/* ================= CTA ================= */}
       <motion.section variants={fadeUp} className="text-center">
-        <h2 className="text-3xl font-semibold text-foreground mb-4">
-          Join the Journey
-        </h2>
-
+        <h2 className="text-3xl font-semibold text-foreground mb-4">Join the Journey</h2>
         <p className="text-muted-foreground leading-relaxed max-w-lg mx-auto mb-8">
-          Explore tutorials, improve your skills, and build production-ready
-          applications with confidence.
+          Explore tutorials, projects, and insights created by our team. Learn, collaborate, and build modern web applications with confidence.
         </p>
         <Link href="/blog">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="px-8 py-3 rounded-lg font-semibold bg-blue-600 text-white  
-                    hover:bg-blue-700 shadow-lg dark:shadow-[0_0_30px_rgba(59,130,246,0.35)]"
+                       hover:bg-blue-700 shadow-lg dark:shadow-[0_0_30px_rgba(59,130,246,0.35)]"
           >
             Explore Blog
           </motion.button>

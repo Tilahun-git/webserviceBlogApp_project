@@ -5,17 +5,31 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Heart, MessageCircle, Calendar, User } from 'lucide-react';
-import { Post, toggleLikePost } from '@/lib/api';
+
+interface PostCardPost {
+  id: string;
+  title: string;
+  content: string;
+  category?: string;
+  createdAt: string;
+  author: {
+    username: string;
+    profilePicture?: string;
+  };
+  likes?: number;
+  comments?: number;
+  mediaUrl?: string;
+}
 
 interface PostCardProps {
-  post: Post;
+  post: PostCardPost;
   userId?: number;
   category?: string;
 }
 
 export default function PostCard({ post, userId, category }: PostCardProps) {
   const router = useRouter();
-  const [likes, setLikes] = useState(post.likeCount);
+  const [likes, setLikes] = useState(post.likes || 0);
   const [liked, setLiked] = useState(false);
   const [isCommentHovered, setIsCommentHovered] = useState(false);
 
@@ -29,11 +43,9 @@ export default function PostCard({ post, userId, category }: PostCardProps) {
     }
 
     try {
-      const { post: updatedPost, likedByCurrentUser } =
-        await toggleLikePost(post.id, userId);
-
-      setLikes(updatedPost.likeCount);
-      setLiked(likedByCurrentUser);
+      // TODO: Implement API call to toggle like
+      setLikes(prev => liked ? prev - 1 : prev + 1);
+      setLiked(!liked);
     } catch (error) {
       console.error('Failed to like post:', error);
     }
@@ -69,7 +81,7 @@ export default function PostCard({ post, userId, category }: PostCardProps) {
         {/* Image Preview */}
         <div className="relative w-full h-48 sm:h-56 overflow-hidden">
           <Image
-            src={post.imageUrl || '/placeholder.png'}
+            src={post.mediaUrl || '/placeholder.png'}
             alt={post.title}
             fill
             className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -78,11 +90,11 @@ export default function PostCard({ post, userId, category }: PostCardProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
           {/* Category Badge - Overlay */}
-          {category && (
+          {(category || post.category) && (
             <div className="absolute top-4 left-4">
               <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border border-white/20">
                 <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">
-                  {category}
+                  {category || post.category}
                 </span>
               </div>
             </div>

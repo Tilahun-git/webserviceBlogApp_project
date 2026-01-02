@@ -2,7 +2,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import Comment from "./Comment";
@@ -32,23 +31,16 @@ export default function CommentSection({ postId }: CommentSectionProps) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  const currentUser: CurrentUser | null = useSelector(
-    (state: { user: { currentUser: CurrentUser | null } }) =>
-      state.user.currentUser
-  );
+  // TODO: Replace with actual auth context
+  const currentUser: CurrentUser | null = null;
 
   // Fetch comments
   useEffect(() => {
     const fetchComments = async () => {
       try {
         setLoading(true);
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/comments/post/${postId}`
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setComments(data);
-        }
+        // TODO: Replace with actual API call
+        setComments([]);
       } catch (error) {
         console.error("Failed to fetch comments:", error);
       } finally {
@@ -65,25 +57,18 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
     setSubmitting(true);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/comments`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            content: newComment,
-            postId: postId,
-            userId: currentUser.id,
-          }),
-        }
-      );
-
-      if (res.ok) {
-        const newCommentData: CommentData = await res.json();
-        setComments([newCommentData, ...comments]);
-        setNewComment("");
-      }
+      // TODO: Replace with actual API call
+      const newCommentData: CommentData = {
+        id: Date.now(),
+        content: newComment,
+        postId: postId,
+        userId: currentUser.id,
+        createdAt: new Date().toISOString(),
+        likes: []
+      };
+      
+      setComments([newCommentData, ...comments]);
+      setNewComment("");
     } catch (error) {
       console.error("Failed to submit comment:", error);
     } finally {

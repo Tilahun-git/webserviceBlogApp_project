@@ -8,21 +8,25 @@ import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  fetchCategories,
-  fetchPostsByCategory,
-  fetchAllPosts, // Added import
-  searchPosts,
-  Post,
-  Category,
-} from "@/lib/api";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import { fetchCategories, fetchAllPosts, fetchPostsByCategory, searchPosts } from "@/lib/api";
+
+interface Post {
+  id: number;
+  title: string;
+  content: string;
+  mediaType?: string;
+  mediaUrl?: string;
+  likeCount?: number;
+  author: string;
+  categoryTitle: string;
+  createdAt?: string; 
+}
+
+interface Category {
+  id: number;
+  title: string;
+}
 
 export default function BlogPage() {
   const router = useRouter();
@@ -35,17 +39,54 @@ export default function BlogPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
+  // API functions - connected to backend using imported functions
+  const loadCategories = async (): Promise<Category[]> => {
+    try {
+      return await fetchCategories();
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+      return [];
+    }
+  };
+
+  const loadAllPosts = async (sort: "asc" | "desc"): Promise<Post[]> => {
+    try {
+      return await fetchAllPosts(sort);
+    } catch (error) {
+      console.error('Failed to fetch posts:', error);
+      return [];
+    }
+  };
+
+  const loadPostsByCategory = async (categoryId: number, sort: "asc" | "desc"): Promise<Post[]> => {
+    try {
+      return await fetchPostsByCategory(categoryId, sort);
+    } catch (error) {
+      console.error('Failed to fetch posts by category:', error);
+      return [];
+    }
+  };
+
+  const loadSearchPosts = async (query: string, sort: "asc" | "desc"): Promise<Post[]> => {
+    try {
+      return await searchPosts(query, sort);
+    } catch (error) {
+      console.error('Failed to search posts:', error);
+      return [];
+    }
+  };
+
   // Fetch categories
   useEffect(() => {
-    const loadCategories = async () => {
+    const loadCategoriesData = async () => {
       try {
-        const data = await fetchCategories();
+        const data = await loadCategories();
         setCategories([{ id: 0, title: "All Categories" }, ...data]);
       } catch (err) {
         console.error("Failed to fetch categories", err);
       }
     };
-    loadCategories();
+    loadCategoriesData();
   }, []);
 
   // Fetch posts based on current state
@@ -55,13 +96,13 @@ export default function BlogPage() {
       let data: Post[];
       
       if (searchQuery.trim()) {
-        // Search mode
+
         data = await searchPosts(searchQuery, sortOrder);
       } else if (category === 0) {
-        // All categories mode
+
         data = await fetchAllPosts(sortOrder);
       } else {
-        // Specific category mode
+
         data = await fetchPostsByCategory(category, sortOrder);
       }
       
@@ -96,7 +137,7 @@ export default function BlogPage() {
     setCategory(0);
     
     // Force reload all posts
-    fetchAllPosts(sortOrder)
+    loadAllPosts(sortOrder)
       .then(data => {
         setPosts(data);
         setLoading(false);
@@ -123,7 +164,7 @@ export default function BlogPage() {
   // Loading state
   if (loading && posts.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-neutral-900 dark:to-neutral-800 flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-linear-to-b from-gray-50 to-white dark:from-neutral-900 dark:to-neutral-800 flex flex-col items-center justify-center">
         <div className="text-center space-y-4">
           <Spinner className="w-12 h-12 text-teal-600 mx-auto" />
           <p className="text-gray-600 dark:text-gray-300">Loading posts...</p>
@@ -133,9 +174,9 @@ export default function BlogPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-neutral-900 dark:to-neutral-800">
+    <div className="min-h-screen bg-linear-to-b from-gray-50 to-white dark:from-neutral-900 dark:to-neutral-800">
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-teal-500 via-blue-500 to-indigo-600 py-16 md:py-20">
+      <div className="relative overflow-hidden bg-linear-to-r from-teal-500 via-blue-500 to-indigo-600 py-16 md:py-20">
         <div className="absolute inset-0 bg-black/10" />
         <div className="relative max-w-7xl mx-auto px-4">
           <div className="text-center mb-10">
@@ -151,27 +192,30 @@ export default function BlogPage() {
           {/* Search Bar */}
           <div className="max-w-3xl mx-auto">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size={20} />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2
+               text-gray-400 z-10" size={20} />
               <Input
                 type="search"
                 placeholder="Search articles, topics, or authors..."
-                className="pl-12 pr-12 py-6 rounded-2xl text-lg border-0 shadow-lg bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm"
+                className="pl-12 pr-12 py-6 rounded-2xl text-lg border-0 shadow-lg bg-white/95
+                 dark:bg-gray-900/95 backdrop-blur-sm"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     setSearchQuery(inputValue.trim());
-                    setCategory(0); // Reset category when searching
+                    setCategory(0); 
                   }
                 }}
               />
               {inputValue && (
-                <button
+                <Button
                   onClick={handleClearSearch}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400
+                   hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   <X size={20} />
-                </button>
+                </Button>
               )}
             </div>
             <div className="flex justify-center mt-4">
@@ -180,7 +224,8 @@ export default function BlogPage() {
                   setSearchQuery(inputValue.trim());
                   setCategory(0); // Reset category when searching
                 }}
-                className="px-8 py-6 rounded-xl bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 border border-white/30 transition-all hover:scale-105"
+                className="px-8 py-6 rounded-xl bg-white/20 backdrop-blur-sm text-white 
+                hover:bg-white/30 border border-white/30 transition-all hover:scale-105"
               >
                 <Search className="mr-2" size={18} />
                 Search Posts
@@ -217,8 +262,7 @@ export default function BlogPage() {
                 variant={viewMode === "grid" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("grid")}
-                className="rounded-lg px-4"
-              >
+                className="rounded-lg px-4">
                 Grid
               </Button>
               <Button
@@ -234,8 +278,7 @@ export default function BlogPage() {
             {/* Sort */}
             <Select
               value={sortOrder}
-              onValueChange={(v) => setSortOrder(v as "asc" | "desc")}
-            >
+              onValueChange={(v) => setSortOrder(v as "asc" | "desc")}>
               <SelectTrigger className="w-44">
                 <SelectValue>
                   <div className="flex items-center gap-2">
@@ -267,8 +310,7 @@ export default function BlogPage() {
               onClick={handleRefresh}
               className="rounded-xl border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
               disabled={loading}
-              title="Refresh all posts"
-            >
+              title="Refresh all posts">
               <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
             </Button>
           </div>
@@ -284,8 +326,7 @@ export default function BlogPage() {
             <div className="hidden sm:block w-full max-w-md">
               <Select
                 value={category.toString()}
-                onValueChange={(v) => handleCategoryChange(Number(v))}
-              >
+                onValueChange={(v) => handleCategoryChange(Number(v))}>
                 <SelectTrigger className="w-full">
                   <SelectValue>
                     <div className="flex items-center gap-2">
@@ -314,11 +355,10 @@ export default function BlogPage() {
                       ? "bg-teal-600 text-white"
                       : ""
                   }`}
-                  onClick={() => handleCategoryChange(0)}
-                >
+                  onClick={() => handleCategoryChange(0)}>
                   All
                 </Badge>
-                {categories.slice(0, 3).map((cat) => (
+                {categories.slice(1, 4).map((cat) => (
                   <Badge
                     key={cat.id}
                     variant={category === cat.id ? "default" : "outline"}
@@ -327,12 +367,11 @@ export default function BlogPage() {
                         ? "bg-teal-600 text-white"
                         : ""
                     }`}
-                    onClick={() => handleCategoryChange(cat.id)}
-                  >
+                    onClick={() => handleCategoryChange(cat.id)}>
                     {cat.title.length > 15 ? cat.title.substring(0, 15) + "..." : cat.title}
                   </Badge>
                 ))}
-                {categories.length > 3 && (
+                {categories.length > 4 && (
                   <Select
                     value={category.toString()}
                     onValueChange={(v) => handleCategoryChange(Number(v))}
@@ -345,7 +384,7 @@ export default function BlogPage() {
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.slice(3).map((cat) => (
+                      {categories.slice(4).map((cat) => (
                         <SelectItem key={cat.id} value={cat.id.toString()}>
                           {cat.title}
                         </SelectItem>
@@ -398,7 +437,20 @@ export default function BlogPage() {
               {posts.map((post) => (
                 <PostCard
                   key={post.id}
-                  post={post}
+                  post={{
+                    id: post.id.toString(),
+                    title: post.title,
+                    content: post.content,
+                    category: post.categoryTitle,
+                    createdAt: post.createdAt || new Date().toISOString(),
+                    author: {
+                      username: post.author,
+                      profilePicture: undefined
+                    },
+                    likes: post.likeCount,
+                    comments: 0,
+                    mediaUrl: post.mediaUrl
+                  }}
                 />
               ))}
             </div>
@@ -425,7 +477,8 @@ export default function BlogPage() {
 
       {/* Footer CTA */}
       <div className="max-w-7xl mx-auto px-4 pb-12">
-        <div className="bg-gradient-to-r from-teal-50 to-blue-50 dark:from-teal-900/20 dark:to-blue-900/20 rounded-2xl p-8 text-center border border-teal-200 dark:border-teal-800">
+        <div className="bg-linear-to-r from-teal-50 to-blue-50 dark:from-teal-900/20
+         dark:to-blue-900/20 rounded-2xl p-8 text-center border border-teal-200 dark:border-teal-800">
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             Want to share your own story?
           </h3>
@@ -434,8 +487,7 @@ export default function BlogPage() {
           </p>
           <Button
             className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-3 rounded-lg"
-            onClick={handleCreatePost}
-          >
+            onClick={handleCreatePost}>
             Create a Post
           </Button>
         </div>
