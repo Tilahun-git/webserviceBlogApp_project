@@ -15,12 +15,12 @@ export function middleware(req: NextRequest) {
   }
 
   // Protect admin routes
-  if (pathname.startsWith("/admin")) {
-    if (!token || !isAdmin) {
-      const loginUrl = new URL("/auth/sign-in", req.url);
-      return NextResponse.redirect(loginUrl);
-    }
-  }
+  // if (pathname.startsWith("/admin")) {
+  //   if (!token || !isAdmin) {
+  //     const loginUrl = new URL("/auth/sign-in", req.url);
+  //     return NextResponse.redirect(loginUrl);
+  //   }
+  // }
 
   return NextResponse.next();
 }

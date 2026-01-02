@@ -1,39 +1,53 @@
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { signupApi, signInApi, SignupData, SigninData } from '@/lib/api';
-import Cookies from 'js-cookie';
-
 
 /* ---------- SIGN UP ---------- */
 export const signUpUser = createAsyncThunk(
     'auth/signUp',
     async (data: SignupData, { rejectWithValue }) => {
       try {
-        return await signupApi(data);
+        const response = await signupApi(data);
+        return response.data.data;
       } catch (err: any) {
-        return rejectWithValue(err.response?.data?.message ?? 'Signup failed');
+        if (err.message === 'SSL_CERTIFICATE_ERROR') {
+          return rejectWithValue('SSL Certificate Error: Please visit https://localhost:8080 in your browser and accept the security certificate, then try again.');
+        }
+        const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Registration failed';
+        return rejectWithValue(errorMessage);
       }
     }
 );
 
 /* ---------- SIGN IN ---------- */
 export const signInUser = createAsyncThunk(
-    'auth/signIn',
+    'auth/sign-in',
     async (data: SigninData, { rejectWithValue }) => {
       try {
-        const res = await signInApi(data);
-        localStorage.setItem('token', res.token);
-        return res;
+        const response = await signInApi(data);
+        const token = response.data.data?.token;
+        const roleName = response.data.data?.roleName; 
+        
+        if (token) {
+          localStorage.setItem('token', token);
+        }
+        
+      return {token,roleName}; 
       } catch (err: any) {
-        return rejectWithValue(err.response?.data?.error ?? 'Login failed');
+        if (err.message === 'SSL_CERTIFICATE_ERROR') {
+          return rejectWithValue('SSL Certificate Error: Please visit https://localhost:8080 in your browser and accept the security certificate, then try again.');
+        }
+        const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Login failed! Please try with valid credintials';
+        return rejectWithValue(errorMessage);
       }
     }
 );
 
 interface AuthState {
- user: { firstName?: string; email: string; profilePic?: string } | null;
+  user: { firstName?: string; email: string; profilePic?: string } | null;
   isAuthenticated: boolean;
   token: string | null;
+  roleName:string|null;
   loading: boolean;
   error: string | null;
 }
@@ -42,6 +56,7 @@ const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
   token: null,
+  roleName:null,
   loading: false,
   error: null,
 };
@@ -56,23 +71,19 @@ const authSlice = createSlice({
       state.token = null;
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
-        document.cookie = 'authToken=; path=/; max-age=0; SameSite=Lax';
-        document.cookie = 'userRole=; path=/; max-age=0; SameSite=Lax';
       }
     },
     loadToken: (state) => {
-      let token: string | null = null;
       if (typeof window !== 'undefined') {
-        token = localStorage.getItem('token');
-        if (!token) {
-          const match = document.cookie.split('; ').find(c => c.startsWith('authToken='));
-          token = match ? match.split('=')[1] : null;
+        const token = localStorage.getItem('token');
+        if (token) {
+          state.token = token;
+          state.isAuthenticated = true;
         }
       }
-      if (token) {
-        state.token = token;
-        state.isAuthenticated = true;
-      }
+    },
+    clearError: (state) => {
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
@@ -84,6 +95,7 @@ const authSlice = createSlice({
       })
       .addCase(signUpUser.fulfilled, (state) => {
         state.loading = false;
+        state.error = null;
       })
       .addCase(signUpUser.rejected, (state, action) => {
         state.loading = false;
@@ -97,26 +109,19 @@ const authSlice = createSlice({
       })
       .addCase(signInUser.fulfilled, (state, action) => {
         state.loading = false;
-        const token = action.payload?.token;
-        const role = (action.payload?.role ?? action.payload?.user?.role ?? 'user');
-        state.token = token ?? null;
-        state.isAuthenticated = Boolean(token);
-        if (typeof window !== 'undefined') {
-          if (token) {
-            localStorage.setItem('token', token);
-            document.cookie = `authToken=${token}; path=/; SameSite=Lax`;
-          }
-          if (role) {
-            document.cookie = `userRole=${String(role)}; path=/; SameSite=Lax`;
-          }
-        }
+        state.error = null;
+        state.token = action.payload?.token ?? null;
+          state.roleName = action.payload?.roleName ?? null; 
+        state.isAuthenticated = Boolean(state.token);
       })
       .addCase(signInUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+        state.isAuthenticated = false;
+        state.token = null;
       });
   },
 });
 
-export const { signOut, loadToken } = authSlice.actions;
+export const { signOut, loadToken, clearError } = authSlice.actions;
 export default authSlice.reducer;

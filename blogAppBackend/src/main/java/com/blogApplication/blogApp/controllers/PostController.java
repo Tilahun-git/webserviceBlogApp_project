@@ -1,9 +1,14 @@
 package com.blogApplication.blogApp.controllers;
 
 import com.blogApplication.blogApp.dto.postDto.PostDto;
+import com.blogApplication.blogApp.payloads.ApiResponse;
+import com.blogApplication.blogApp.services.servicesContract.PostServiceContract;
 import com.blogApplication.blogApp.services.servicesImpl.PostServiceImpl;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,80 +24,64 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/posts")
+@RequiredArgsConstructor
 public class PostController {
 
-    @Autowired
-    private PostServiceImpl postService;
+    private final PostServiceContract postService;
 
-
-
-    // GET METHOD TO RETRIEVE SINGLE POST
+    // GET METHOD TO RETRIEVE ALL POSTs
 
     @GetMapping("/public")
-    public ResponseEntity<Map<String, Object>> getAllPosts(
-            @RequestParam(defaultValue = "0") int pageNumber,
-            @RequestParam(defaultValue = "4") int pageSize,
+    public ResponseEntity<ApiResponse<List<PostDto>>> getAllPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir,
-            @RequestParam(required = false) String search // optional search by title/content
+            @RequestParam(required = false) String search
     ) {
-
         Sort sort = sortDir.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
 
-        Page<PostDto> page = postService.getAllPosts(pageNumber, pageSize, sort, search);
+        Pageable pageable = PageRequest.of(page, size, sort);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("posts", page.getContent());
-        response.put("currentPage", page.getNumber());
-        response.put("totalItems", page.getTotalElements());
-        response.put("totalPages", page.getTotalPages());
+        List<PostDto> posts = postService.getAllPosts(pageable, search);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Posts fetched successfully", posts)
+        );
     }
 
 
     //GET METHOD TO RETRIEVE SINGLE POST
-
-    @GetMapping("post/public/{id}")
-    public ResponseEntity<PostDto> getPostById(@PathVariable long id) {
-        return ResponseEntity.ok(postService.getPostById(id));
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<PostDto>> getPostById(@PathVariable long id) {
+        PostDto post = postService.getPostById(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Post fetched successfully", post)
+        );
     }
 
     // POST METHOD TO ADD POST WITH MEDIA (IMAGE/VIDEO)
-    @PostMapping("/user/{userId}/category/{categoryId}/posts")
-    public ResponseEntity<?> addPost(
+    @PostMapping("/createPost/{categoryId}")
+    public ResponseEntity<ApiResponse<PostDto>> createPost(
             @RequestPart("post") PostDto postDto,
-            @RequestPart MultipartFile mediaFile,
-            @PathVariable long userId,
+            @RequestPart("file") MultipartFile mediaFile,
             @PathVariable long categoryId
     ) throws IOException {
-
-        PostDto createdPost = postService.createPost(postDto, mediaFile, userId, categoryId);
+        PostDto createdPost = postService.createPost(postDto, mediaFile, categoryId);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of(
-                        "message", "Post created successfully",
-                        "data", createdPost
-                ));
+                .body(new ApiResponse<>(true, "Post created successfully", createdPost));
     }
-
-    // PUT METHOD TO UPDATE POST WITH OPTIONAL MEDIA
-    @PutMapping("/post/{postId}/update")
-    public ResponseEntity<?> updatePost(
+    @PutMapping("/{postId}/update")
+    public ResponseEntity<ApiResponse<PostDto>> updatePost(
             @RequestPart("post") PostDto postDto,
-            @RequestPart MultipartFile mediaFile,
-            @PathVariable long postId
+            @RequestPart(required = false) MultipartFile mediaFile,
+            @PathVariable Long postId
     ) throws IOException {
-
         PostDto updatedPost = postService.updatePost(postDto, mediaFile, postId);
-        return ResponseEntity.ok(Map.of(
-                "message", "Post updated successfully",
-                "data", updatedPost
-        ));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Post updated successfully", updatedPost));
     }
-
-
 
     //TOGGLE THE LIKE OF SPECIFIC POST
 
@@ -103,7 +92,7 @@ public class PostController {
     ) {
         boolean liked = postService.toggleLike(postId, userId);
 
-        PostDto updatedPost = postService.getPostById(postId); // existing method
+        PostDto updatedPost = postService.getPostById(postId);
         Map<String, Object> response = new HashMap<>();
         response.put("post", updatedPost);
         response.put("likedByCurrentUser", liked);
@@ -113,21 +102,21 @@ public class PostController {
 
 
     //DELETE METHOD TO DELETE SINGLE POST
-    @DeleteMapping("/post/user/{id}")
-    public ResponseEntity<?> deletePost(@PathVariable long id) throws IOException {
+
+    @DeleteMapping("/post/{id}")
+    public ResponseEntity<ApiResponse<PostDto>> deletePost(@PathVariable Long id) throws IOException {
         PostDto deletedPost = postService.deletePostById(id);
-        return ResponseEntity.ok(Map.of(
-                "message", "Post deleted successfully",
-                "data", deletedPost
-        ));
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Post deleted successfully", deletedPost)
+        );
     }
 
-    // GET METHOD TO FIND POSTS BY SPECIFIC USER
-    @GetMapping("/public/user/{userId}/posts")
-    public ResponseEntity<Page<PostDto>> getPostsByUser(
-            @PathVariable("userId") long userId,
-            @RequestParam(defaultValue = "0") int pageNumber,
-            @RequestParam(defaultValue = "10") int pageSize,
+
+    @GetMapping("/user/posts")
+    public ResponseEntity<ApiResponse<List<PostDto>>> getUserPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir
     ) {
@@ -135,17 +124,24 @@ public class PostController {
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
 
-        Page<PostDto> postsByUser = postService.getPostsByUser(userId, pageNumber, pageSize, sort);
-        return ResponseEntity.ok(postsByUser);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        List<PostDto> posts = postService.getPostsByUser(pageable);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Posts fetched successfully for user", posts)
+        );
     }
+
+
+
 
     // GET METHOD TO FIND POSTS BY SPECIFIC CATEGORY
-    @GetMapping("/public/category/{categoryId}/posts")
-    public ResponseEntity<Page<PostDto>> getPostsByCategory(
-
-            @PathVariable("categoryId") long categoryId,
-            @RequestParam(defaultValue = "0") int pageNumber,
-            @RequestParam(defaultValue = "10") int pageSize,
+    @GetMapping("/{categoryId}/posts")
+    public ResponseEntity<ApiResponse<List<PostDto>>> getPostsByCategory(
+            @PathVariable long categoryId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir
     ) {
@@ -153,17 +149,22 @@ public class PostController {
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
 
-        Page<PostDto> postsByCategory = postService.getPostsByCategory(categoryId, pageNumber, pageSize, sort);
-        return ResponseEntity.ok(postsByCategory);
+        Pageable pageable = PageRequest.of(page, size, sort);
 
+        List<PostDto> posts = postService.getPostsByCategory(categoryId, pageable);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Posts fetched successfully for category", posts)
+        );
     }
+
 
     // GET METHOD TO SEARCH POSTS
-    @GetMapping("/public/search")
-    public ResponseEntity<Page<PostDto>> searchPosts(
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<PostDto>>> searchPosts(
             @RequestParam String keyword,
-            @RequestParam(defaultValue = "0") int pageNumber,
-            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir
     ) {
@@ -171,9 +172,15 @@ public class PostController {
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
 
-        Page<PostDto> posts = postService.searchPosts(keyword, pageNumber, pageSize, sort);
-        return ResponseEntity.ok(posts);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        List<PostDto> posts = postService.searchPosts(keyword, pageable);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Search results fetched successfully", posts)
+        );
     }
+
 
 
 }

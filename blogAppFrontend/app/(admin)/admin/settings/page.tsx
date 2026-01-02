@@ -1,123 +1,125 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+import React, { useState } from 'react';
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { UploadCloud } from 'lucide-react';
 
-interface SettingsData {
-  siteTitle: string;
-  maintenanceMode: boolean;
-  postsPerPage: number;
-}
 
-export default function AdminSettingsPage() {
-  const [settings, setSettings] = useState<SettingsData>({
-    siteTitle: "",
-    maintenanceMode: false,
-    postsPerPage: 10,
-  });
-  const [loading, setLoading] = useState<boolean>(false);
-  const [saving, setSaving] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
-  const [success, setSuccess] = useState<string>("");
 
-  useEffect(() => {
-    const loadSettings = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/settings`, {
-          credentials: "include",
-        });
-        if (!res.ok) throw new Error("Failed to fetch settings");
-        const data = await res.json();
-        setSettings({
-          siteTitle: data.siteTitle ?? "My Blog",
-          maintenanceMode: Boolean(data.maintenanceMode),
-          postsPerPage: Number(data.postsPerPage ?? 10),
-        });
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Error loading settings");
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadSettings();
-  }, []);
-
-  const handleSave = async () => {
-    setSaving(true);
-    setError("");
-    setSuccess("");
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/settings`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings),
-        credentials: "include",
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error((data && data.message) || "Failed to save settings");
-      setSuccess("Settings saved successfully");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error saving settings");
-    } finally {
-      setSaving(false);
+const SettingsPanel = () => {
+  const [appName, setAppName] = useState('My Blog App');
+  const [logo, setLogo] = useState('');
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [privacyRules, setPrivacyRules] = useState('Default privacy rules...');
+  const [contentRules, setContentRules] = useState('Default content moderation rules...');
+  const [seoTitle, setSeoTitle] = useState('My Blog App');
+  const [seoDescription, setSeoDescription] = useState('Best blog app for developers');
+ 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result) setLogo(reader.result as string);
+      };
+      reader.readAsDataURL(e.target.files[0]);
     }
   };
 
+  const saveSettings = () => {
+    // Here you would call your API to save settings
+    console.log({
+      appName,
+      logo,
+      maintenanceMode,
+      privacyRules,
+      contentRules,
+      seoTitle,
+      seoDescription,
+      
+    });
+    alert('Settings saved successfully!');
+  };
+
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">Admin Settings</h1>
-      <p className="text-sm text-muted-foreground mb-6">Manage site-wide configuration for your blog.</p>
+    <div className="p-6 w-full space-y-6">
+      <h1 className="text-2xl font-bold mb-4">Settings Panel</h1>
 
-      {loading ? (
-        <div className="text-sm">Loading settings...</div>
-      ) : (
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="siteTitle">Site Title</Label>
-            <Input
-              id="siteTitle"
-              placeholder="Enter site title"
-              value={settings.siteTitle}
-              onChange={(e) => setSettings((s) => ({ ...s, siteTitle: e.target.value }))}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <Label htmlFor="maintenance">Maintenance Mode</Label>
-              <p className="text-xs text-muted-foreground">Temporarily take the site offline for updates.</p>
+      {/* App Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>App Settings</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium mb-1">App Name</label>
+              <Input value={appName} onChange={(e) => setAppName(e.target.value)} />
             </div>
-            <Switch
-              id="maintenance"
-              checked={settings.maintenanceMode}
-              onCheckedChange={(checked) => setSettings((s) => ({ ...s, maintenanceMode: checked }))}
-            />
+            <div className="flex-1">
+              <label className="block text-sm font-medium mb-1">App Logo</label>
+              <div className="flex items-center space-x-4">
+    
+                <label className="flex items-center px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded cursor-pointer">
+                  <UploadCloud className="mr-2" /> Upload
+                  <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                </label>
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="postsPerPage">Posts Per Page</Label>
-            <Input
-              id="postsPerPage"
-              type="number"
-              min={1}
-              max={100}
-              value={settings.postsPerPage}
-              onChange={(e) => setSettings((s) => ({ ...s, postsPerPage: Number(e.target.value) }))}
-            />
+          <div className="flex items-center space-x-2">
+            <Switch checked={maintenanceMode} onCheckedChange={setMaintenanceMode} />
+            <span>Maintenance Mode</span>
           </div>
+        </CardContent>
+      </Card>
 
-          <div className="flex items-center gap-3">
-            <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save Settings"}</Button>
-            {error && <span className="text-sm text-red-500">{error}</span>}
-            {success && <span className="text-sm text-green-600">{success}</span>}
+      {/* Privacy & Content Rules */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Privacy & Content Rules</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Privacy Rules</label>
+            <Textarea value={privacyRules} onChange={(e) => setPrivacyRules(e.target.value)} />
           </div>
-        </div>
-      )}
+          <div>
+            <label className="block text-sm font-medium mb-1">Content Moderation Rules</label>
+            <Textarea value={contentRules} onChange={(e) => setContentRules(e.target.value)} />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* SEO Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>SEO Settings</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">SEO Title</label>
+            <Input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">SEO Description</label>
+            <Textarea value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} />
+          </div>
+        </CardContent>
+      </Card>
+
+    
+
+      {/* Save Button */}
+      <div className="flex justify-end mt-4">
+        <Button onClick={saveSettings}>Save Settings</Button>
+      </div>
     </div>
   );
-}
+};
+
+export default SettingsPanel;

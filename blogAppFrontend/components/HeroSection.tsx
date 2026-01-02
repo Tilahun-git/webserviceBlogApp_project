@@ -15,7 +15,7 @@ export default function HeroSection() {
             transition={{ duration: 0.8 }}
             className="text-center lg:text-left">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold text-foreground leading-tight mb-6">
-              Writing That{" "}
+              Discover{" "}
               <span className="text-primary italic">Blogs</span>
             </h1>
 

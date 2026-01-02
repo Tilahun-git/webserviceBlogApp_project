@@ -1,109 +1,77 @@
 package com.blogApplication.blogApp.controllers;
 
-
-import com.blogApplication.blogApp.dto.userDto.RegisterRequestDto;
-import com.blogApplication.blogApp.dto.userDto.UserResponseDto;
-import com.blogApplication.blogApp.dto.userDto.UserUpdateDto;
-import com.blogApplication.blogApp.services.servicesImpl.UserServiceImpl;
+import com.blogApplication.blogApp.dto.userDto.*;
+import com.blogApplication.blogApp.entities.User;
+import com.blogApplication.blogApp.payloads.ApiResponse;
+import com.blogApplication.blogApp.services.servicesContract.UserServiceContract;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/user")
 @RequiredArgsConstructor
 public class UserController {
-    @Autowired
-    private UserServiceImpl userService;
 
+    private final UserServiceContract userService;
 
-    // POST METHOD TO ADD NEW USER
+    @GetMapping("/profile")
 
-<<<<<<< HEAD
-    @PostMapping("/sign-up")
-    public ResponseEntity<UserResponseDto> registerUser(@RequestBody RegisterRequestDto userDto) {
-=======
-    @PostMapping("/user/register")
-    public ResponseEntity<UserResponseDto> registerUser(@RequestPart RegisterRequestDto userDto ,@RequestPart MultipartFile profileMedia) {
->>>>>>> main
-
-        return new ResponseEntity<>(userService.registerUser(userDto,profileMedia), HttpStatus.CREATED);
-    }
-
-    // GET METHOD TO GET SINGLE USER
-    @GetMapping("/user/{id}")
-    public ResponseEntity<UserResponseDto> getUser(@PathVariable Long id) {
-        return  ResponseEntity.ok(userService.getUser(id));
-    }
-    //PUT METHOD TO UPDATE EXISTING USER
-
-    @PutMapping("/user/{id}")
-    public ResponseEntity<UserUpdateDto> updateUser(@RequestPart UserUpdateDto userDto, @PathVariable Long id,@RequestPart MultipartFile profileMedia) {
-        UserUpdateDto updatedUser = userService.updateUser(userDto, id, profileMedia);
-        return ResponseEntity.ok(updatedUser);
-
+    public ResponseEntity<ApiResponse<UserResponseDto>> getUser() {
+        UserResponseDto user = userService.getUser();
+        return ResponseEntity.ok(new ApiResponse<>(true, "User fetched successfully", user));
     }
 
 
-    // DELETE METHOD TO DELETE BY USING ID
-
-    @DeleteMapping("/user/admin/{id}/deactivate")
-    public ResponseEntity<?> deActivateUser(@PathVariable Long id) {
-        UserResponseDto deActivatedUser = userService.activateAndDeActiveUser(id);
-        return ResponseEntity.ok(Map.of("message", "User deactivated successfully", "data", deActivatedUser));
-    }
-
-    @PutMapping("/user/admin/{id}/activate")
-    public ResponseEntity<?> activateUser(@PathVariable Long id) {
-        UserResponseDto activatedUser = userService.activateAndDeActiveUser(id);
-        return ResponseEntity.ok(Map.of("message", "User activated successfully", "data", activatedUser));
-    }
-
-
-
-    // GET ALL USERS BY PAGINATION AND SORTING WHO CAN ADMIN
-
-
-    @GetMapping("/user/admin/users")
-    public ResponseEntity<Page<UserResponseDto>> getAllUsers(
-            @RequestParam(defaultValue = "0") int pageNumber,
-            @RequestParam(defaultValue = "10") int pageSize,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDir
+    @PutMapping("/profile/update")
+    public ResponseEntity<ApiResponse<UserUpdateDto>> updateProfile(
+            @RequestPart("data") UserUpdateDto userDto,
+            @RequestPart(value = "file", required = false) MultipartFile profileMedia
     ) {
-
-        Sort sort = sortDir.equalsIgnoreCase("asc")
-                ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
-        return ResponseEntity.ok(
-                userService.getAllUsers(pageNumber, pageSize, sort)
-        );
+        UserUpdateDto updatedUser = userService.updateProfile(userDto, profileMedia);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Profile updated successfully", updatedUser));
     }
 
-    // GET ALL USERS BY SEARCHING WHO CAN ADMIN
-
-    @GetMapping("/public/search")
-    public ResponseEntity<Page<UserResponseDto>> searchUsers(
-            @RequestParam String keyword,
-            @RequestParam(defaultValue = "0") int pageNumber,
-            @RequestParam(defaultValue = "10") int pageSize,
-            @RequestParam(defaultValue = "username") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir
+    @PutMapping("/{username}/password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @PathVariable String username,
+            @RequestBody UserChangePassword changePasswordDto
     ) {
+        userService.changePassword(username, changePasswordDto);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Password changed successfully", null));
+    }
 
-        Sort sort = sortDir.equalsIgnoreCase("asc")
-                ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
-        return ResponseEntity.ok(
-                userService.searchUsers(keyword, pageNumber, pageSize, sort)
-        );
+    @PostMapping("/password/reset-token")
+    public ResponseEntity<ApiResponse<String>> generatePasswordResetToken(@RequestParam String email) {
+        String token = userService.generatePasswordResetToken(email);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Password reset token generated", token));
+    }
+
+    @PostMapping("/password/validate-token")
+    public ResponseEntity<ApiResponse<User>> validatePasswordResetToken(
+            @RequestParam String email,
+            @RequestParam Long token
+    ) {
+        User user = userService.validatePasswordResetToken(email, token);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Password reset token validated", user));
+    }
+
+    @PostMapping("/password/reset")
+    public ResponseEntity<ApiResponse<Void>> resetForgottenPassword(
+            @RequestParam String email,
+            @RequestParam String newPassword,
+            @RequestParam String confirmNewPassword
+    ) {
+        userService.resetForgottenPassword(email, newPassword, confirmNewPassword);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Password reset successfully", null));
+    }
+
+    @GetMapping("/{id}/permissions")
+    public ResponseEntity<ApiResponse<Set<String>>> getUserPermissions(@PathVariable Long id) {
+        Set<String> permissions = userService.getUserPermissions(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "User permissions fetched successfully", permissions));
     }
 }

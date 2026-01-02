@@ -1,246 +1,268 @@
 "use client";
 
-import React, { useState } from "react";
+import  {axiosInstance} from "@/lib/api";
+import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import { Loader2, X, FileText, ImageIcon, VideoIcon } from "lucide-react";
 import { toast } from "sonner";
-import Image from "next/image";
+import { AxiosInstance } from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+
+import { createPost, fetchCategories } from "@/lib/api";
+import type { Category, CreatePostData } from "@/lib/api";
 
 type FileType = "text" | "image" | "video";
 
 export default function CreatePost() {
+  const [categories, setCategories] = useState<Category[]>([]);
   const [fileType, setFileType] = useState<FileType>("text");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     title: "",
-    category: "uncategorized",
     content: "",
-    mediaPath: "",
-    mediaType: "TEXT",
+    categoryId: 0,
   });
 
-  /* ================= FILE PICK ================= */
+  /* ================= LOAD CATEGORIES ================= */
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await fetchCategories();
+        setCategories(data);
+        if (data.length > 0) {
+          setForm((prev) => ({ ...prev, categoryId: data[0].id }));
+        }
+      } catch {
+        toast.error("Failed to load categories");
+      }
+    };
+    load();
+  }, []);
+
+  /* ================= FILE HANDLER ================= */
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
+    const selected = e.target.files?.[0];
+    if (!selected) return;
 
     const maxSize = fileType === "video" ? 50 * 1024 * 1024 : 2 * 1024 * 1024;
 
-    if (selectedFile.size > maxSize) {
+    if (selected.size > maxSize) {
       toast.error(
         fileType === "video"
-          ? "Video too large (max 50MB)"
-          : "Image too large (max 2MB)"
+          ? "Video too large (50MB max)"
+          : "Image too large (2MB max)"
       );
       return;
     }
 
-    setFile(selectedFile);
-    setPreview(URL.createObjectURL(selectedFile));
+    setFile(selected);
+    setPreview(URL.createObjectURL(selected));
   };
 
-  /* ================= RESET FILE ================= */
-  const resetFile = () => {
+  const resetMedia = () => {
     setFile(null);
     setPreview(null);
   };
 
   /* ================= SUBMIT ================= */
-  const handlePublish = async (e: React.FormEvent) => {
-    e.preventDefault();
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    if (!formData.content.trim()) {
-      toast.error("Content is required");
-      return;
+  if (!form.title.trim()) return toast.error("Title is required");
+  if (!form.content.trim()) return toast.error("Content is required");
+  if (!form.categoryId) return toast.error("Category is required");
+
+  setLoading(true);
+
+  try {
+    const formData = new FormData();
+
+    // Payload for post
+    const payload: CreatePostData = {
+      title: form.title,
+      content: form.content,
+      categoryId: form.categoryId,
+    };
+
+    // Append JSON post
+    formData.append(
+      "post",
+      new Blob([JSON.stringify(payload)], { type: "application/json" })
+    );
+
+    // Append media file ONLY if image/video
+    if (fileType !== "text" && file) {
+      formData.append("file", file);
+    }else{
+      const emptyFile = new File([], "empty.txt", { type: "text/plain" });
+      formData.append("file", emptyFile);
     }
-    setUploading(true);
 
-    try {
-      let uploadedPath = "";
+    // Choose correct endpoint based on type
+    // if (fileType === "text") {
+    //   // Text-only post endpoint (no file)
+    //   await axiosInstance.post(`/api/posts/createPost/${form.categoryId}`, formData, {
+    //     headers: { "Content-Type": "multipart/form-data" },
+    //   });
+    // } else {
+      // Image/video post endpoint
+      await createPost(formData, form.categoryId);
+    // }
 
-   
+    toast.success("Post published successfully");
 
-     
-
-      /* Reset */
-      setFormData({
-        title: "",
-        category: "uncategorized",
-        content: "",
-        mediaPath: "",
-        mediaType: "TEXT",
-      });
-      setFileType("text");
-      resetFile();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setUploading(false);
+    // Reset form
+    setForm({
+      title: "",
+      content: "",
+      categoryId: categories[0]?.id ?? 0,
+    });
+    setFileType("text");
+    resetMedia();
+  } catch (err: any) {
+    console.error("Failed to create post:", err.response?.data || err.message);
+    if (err.response?.data?.message) {
+      toast.error(`Failed to create post: ${err.response.data.message}`);
+    } else {
+      toast.error("Failed to create post");
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
-    <Card className="max-w-4xl mx-auto shadow-md">
-      <CardHeader className="flex items-center gap-3 flex-row">
-        <FileText className="w-6 h-6 text-blue-600" />
-        <CardTitle className="text-2xl font-bold">Create New Post:</CardTitle>
+    <Card className="max-w-4xl mx-auto">
+      <CardHeader className="flex flex-row items-center gap-2">
+        <FileText className="text-blue-600" />
+        <CardTitle>Create Post</CardTitle>
       </CardHeader>
 
       <CardContent>
-        <form onSubmit={handlePublish} className="space-y-6">
-          {/* ================= TITLE ================= */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* TITLE */}
           <div>
-            <label className="text-sm font-semibold">Title:</label>
+            <label className="font-semibold">Title</label>
             <Input
-              required
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="Post title"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              } />
+            />
           </div>
 
-          {/* ================= CATEGORY + FILE TYPE ================= */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* CATEGORY + TYPE */}
+          <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="text-sm font-semibold">Category:</label>
+              <label className="font-semibold">Category</label>
               <Select
-                value={formData.category}
-                onValueChange={(val) =>
-                  setFormData({ ...formData, category: val })
-                }>
+                value={form.categoryId.toString()}
+                onValueChange={(v) => setForm({ ...form, categoryId: Number(v) })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="nextjs">Next.js</SelectItem>
-                  <SelectItem value="spring-boot">Spring Boot</SelectItem>
-                  <SelectItem value="typescript">TypeScript</SelectItem>
-                  <SelectItem value="uncategorized">Uncategorized</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id.toString()}>
+                      {c.title}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <label className="text-sm font-semibold">Post Type</label>
+              <label className="font-semibold">Post Type</label>
               <Select
                 value={fileType}
-                onValueChange={(val: FileType) => {
-                  setFileType(val);
-                  resetFile();
+                onValueChange={(v: FileType) => {
+                  setFileType(v);
+                  resetMedia();
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Choose type:" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="text">📝 Text</SelectItem>
-                  <SelectItem value="image">🖼️ Photo</SelectItem>
-                  <SelectItem value="video">🎥 Video</SelectItem>
+                  <SelectItem value="text">Text</SelectItem>
+                  <SelectItem value="image">Image</SelectItem>
+                  <SelectItem value="video">Video</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          {/* ================= MEDIA PICKER ================= */}
+          {/* MEDIA */}
           {fileType !== "text" && (
-            <div className="space-y-2">
-              <label className="text-sm font-semibold">
-                {fileType === "image" ? "Photo" : "Video"}
-              </label>
-              <label
-                htmlFor="media-upload"
-                className="border-2 border-dashed rounded-xl p-8 min-h-55
-                flex items-center justify-center cursor-pointer hover:border-blue-500">
+            <div>
+              <label className="font-semibold">Media</label>
+              <label className="border-2 border-dashed rounded-lg p-6 flex justify-center cursor-pointer">
                 {preview ? (
-                  <div className="relative w-full">
+                  <div className="relative">
                     {fileType === "image" ? (
                       <Image
                         src={preview}
-                        alt="Preview"
-                        width={600}
-                        height={400}
-                        className="mx-auto rounded-md max-h-75 object-contain"/>
+                        alt="preview"
+                        width={400}
+                        height={300}
+                        className="rounded"
+                      />
                     ) : (
-                      <video
-                        src={preview}
-                        controls
-                        className="mx-auto max-h-75 rounded-md"/>
+                      <video src={preview} controls className="rounded" />
                     )}
-
                     <Button
-                      type="button"
-                      variant="destructive"
                       size="icon"
+                      variant="destructive"
                       className="absolute top-2 right-2"
                       onClick={(e) => {
                         e.preventDefault();
-                        resetFile();
-                      }}>
-                      <X size={16} />
+                        resetMedia();
+                      }}
+                    >
+                      <X />
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center">
-                    {fileType === "image" ? (
-                      <ImageIcon className="w-12 h-12 text-slate-400 mb-2" />
-                    ) : (
-                      <VideoIcon className="w-12 h-12 text-slate-400 mb-2" />
-                    )}
-                    <p>Click to browse</p>
+                  <div className="text-center">
+                    {fileType === "image" ? <ImageIcon /> : <VideoIcon />}
+                    <p>Click to upload</p>
                   </div>
                 )}
+                <Input
+                  type="file"
+                  hidden
+                  accept={fileType === "image" ? "image/*" : "video/*"}
+                  onChange={handleFileChange}
+                />
               </label>
-              <Input
-                id="media-upload"
-                type="file"
-                accept={fileType === "image" ? "image/*" : "video/*"}
-                onChange={handleFileChange}
-                className="hidden"
-              />
-              </div>
+            </div>
           )}
 
-          {/* ================= CONTENT ================= */}
+          {/* CONTENT */}
           <div>
-            <label className="text-sm font-semibold">Content:</label>
+            <label className="font-semibold">Content</label>
             <Textarea
-              required
-              placeholder="Write your post..."
-              className="min-h-50"
-              value={formData.content}
-              onChange={(e) =>
-                setFormData({ ...formData, content: e.target.value })
-              }
+              value={form.content}
+              onChange={(e) => setForm({ ...form, content: e.target.value })}
+              className="min-h-[150px]"
             />
           </div>
 
-          {/* ================= SUBMIT ================= */}
-          <Button
-            type="submit"
-            disabled={uploading}
-            className="w-full py-6 text-lg font-bold"
-          >
-            {uploading ? (
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? (
               <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Publishing...
+                <Loader2 className="animate-spin mr-2" /> Publishing
               </>
             ) : (
-              "Publish Post"
+              "Publish"
             )}
           </Button>
         </form>

@@ -3,6 +3,7 @@ package com.blogApplication.blogApp.services.servicesImpl;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.blogApplication.blogApp.services.servicesContract.CloudinaryMediaServiceContract;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,10 +13,10 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
+@AllArgsConstructor
 public class CloudinaryMediaServiceImpl implements CloudinaryMediaServiceContract {
 
-    @Autowired
-    private Cloudinary cloudinary;
+    private final Cloudinary cloudinary;
 
     @Override
     public String uploadMedia(MultipartFile mediaFile) {
@@ -132,6 +133,6 @@ public class CloudinaryMediaServiceImpl implements CloudinaryMediaServiceContrac
             path = path.substring(path.indexOf("/") + 1);
         }
 
-        return path; // Keep extension for Cloudinary operations
+        return path;
     }
 }

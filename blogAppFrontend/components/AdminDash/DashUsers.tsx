@@ -1,211 +1,221 @@
-"use client";
-import { useEffect, useState, useMemo } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "@/redux/store";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Table } from "@/components/ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { AlertCircle, Check, X } from "lucide-react";
-import { Modal } from "flowbite-react";
-import { getUsers, updateUser, deleteUser, type User } from "@/lib/api";
-import UserFormModal from "@/components/UserFormModal";
+'use client';
 
+import React, { useEffect, useState } from 'react';
+import { axiosInstance } from '@/lib/api'; // use axiosInstance that adds JWT header automatically
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Trash, Ban, RotateCcw } from 'lucide-react';
+import { toast } from 'sonner';
 
-const PAGE_SIZE = 10;
+interface Role {
+  id: number;
+  name: string | null;
+}
+
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  roles: Role[];
+  status: 'ACTIVE' | 'DEACTIVATED';
+  avatar?: string;
+}
 
 export default function DashUsers() {
-  const currentUser = useSelector((state: RootState) => state.user.currentUser) as User | null;
   const [users, setUsers] = useState<User[]>([]);
-  const [showModal, setShowModal] = useState(false);
-  const [userIdToDelete, setUserIdToDelete] = useState<string>("");
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [page, setPage] = useState<number>(1);
-  const [totalUsers, setTotalUsers] = useState<number>(0);
-  const [editOpen, setEditOpen] = useState<boolean>(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const openEdit = (user: User) => {
-    setSelectedUser(user);
-    setEditOpen(true);
-  };
+  const usersPerPage = 5;
 
-  const handleSaveEdit = async (data: Partial<User>) => {
-    if (!selectedUser) return;
-    try {
-      const updated = await updateUser(selectedUser._id, data);
-      setUsers((prev) => prev.map((u) => (u._id === updated._id ? updated : u)));
-      setEditOpen(false);
-      setSelectedUser(null);
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error(error.message);
-      } else {
-        console.error(String(error) || "Error updating user");
-      }
+  /* ================= FETCH USERS ================= */
+  const fetchUsers = async (
+  page = 0,
+  keyword = '',
+  sortBy = 'username',
+  sortDir = 'asc'
+) => {
+  try {
+    // Use filter endpoint if keyword exists, otherwise default endpoint
+    const url = keyword
+      ? `/api/admin/users/filter?keyword=${encodeURIComponent(keyword)}&pageNumber=${page}&pageSize=${usersPerPage}&sortBy=${sortBy}&sortDir=${sortDir}`
+      : `/api/admin/users?pageNumber=${page}&pageSize=${usersPerPage}&sortBy=${sortBy}&sortDir=${sortDir}`;
+
+    const res = await axiosInstance.get(url); // JWT headers included
+
+    if (res.data.success) {
+      const mappedUsers: User[] = res.data.data.content.map((u: any) => ({
+        id: u.id,
+        username: u.username,
+        email: u.email,
+        roles: u.roles || [],
+        status: u.status,
+        avatar: u.avatar || '',
+      }));
+      setUsers(mappedUsers);
+      setTotalPages(res.data.data.totalPages);
+    } else {
+      toast.error(res.data.message || 'Failed to fetch users');
     }
-  };
+  } catch (err: any) {
+    console.error(err);
+    toast.error(err.response?.data?.message || 'Error fetching users');
+  }
+};
 
-  // Fetch users
-  const fetchUsers = async (page: number) => {
-    try {
-      const data = await getUsers(page, PAGE_SIZE);
-      setUsers(data.users);
-      setTotalUsers(data.total || 0);
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error(error.message);
-      } else {
-        console.error(String(error) || "Error fetching users");
-      }
-    }
-  };
 
   useEffect(() => {
-    (async () => {
-      await fetchUsers(page);
-    })();
-  }, [page]);
+    fetchUsers(currentPage, search);
+  }, [currentPage, search]);
 
-  // Delete user
-  const handleDeleteUser = async () => {
+  /* ================= ACTIONS ================= */
+  const deleteUser = async (id: number) => {
+    if (!confirm('Delete this user permanently?')) return;
     try {
-      await deleteUser(userIdToDelete);
-      setUsers((prev) => prev.filter((u) => u._id !== userIdToDelete));
-      setShowModal(false);
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error(error.message);
+      const res = await axiosInstance.delete(`/api/admin/users/${id}`);
+      if (res.data.success) {
+        toast.success('User deleted successfully');
+        fetchUsers(currentPage, search);
       } else {
-        console.error(String(error) || "Error deleting user");
+        toast.error(res.data.message);
       }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to delete user');
     }
   };
 
-  // Filtered users based on search
-  const filteredUsers = useMemo(
-    () =>
-      users.filter(
-        (u) =>
-          u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          u.email.toLowerCase().includes(searchTerm.toLowerCase())
-      ),
-    [users, searchTerm]
-  );
+  const grantUser = async (id: number) => {
+    try {
+      const res = await axiosInstance.put(`/api/admin/${id}/activate`);
+      if (res.data.success) {
+        toast.success('User activated');
+        fetchUsers(currentPage, search);
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to activate user');
+    }
+  };
 
-  const totalPages = Math.ceil(totalUsers / PAGE_SIZE);
+  const revokeUser = async (id: number) => {
+    try {
+      const res = await axiosInstance.put(`/api/admin/${id}/deactivate`);
+      if (res.data.success) {
+        toast.success('User deactivated');
+        fetchUsers(currentPage, search);
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to deactivate user');
+    }
+  };
+
+  const changeRole = async (id: number, roleName: string) => {
+    try {
+      const res = await axiosInstance.put(`/api/admin/${id}/role/grant?roleName=${roleName}`);
+      if (res.data.success) {
+        toast.success(`Role changed to ${roleName}`);
+        fetchUsers(currentPage, search);
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to change role');
+    }
+  };
+
+  /* ================= PAGINATION ================= */
+  const handlePrevPage = () => setCurrentPage(p => Math.max(p - 1, 0));
+  const handleNextPage = () => setCurrentPage(p => Math.min(p + 1, totalPages - 1));
 
   return (
-    <div className="p-3 overflow-x-auto">
-      {/* Search + Pagination */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-2 mb-4">
+    <div className="p-3 sm:p-6 w-full bg-background text-foreground">
+      <h1 className="text-xl sm:text-2xl font-bold mb-4">User Management</h1>
+
+      {/* SEARCH */}
+      <div className="mb-4 w-full sm:w-72">
         <Input
-          placeholder="Search by username or email..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
+          placeholder="Search by username or email"
+          value={search}
+          onChange={e => {
+            setSearch(e.target.value);
+            setCurrentPage(0);
+          }}
         />
-        <div className="flex gap-2 mt-2 md:mt-0">
-          <Button
-            color="gray"
-            disabled={page <= 1}
-            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-          >
-            Previous
-          </Button>
-          <Button
-            color="gray"
-            disabled={page >= totalPages}
-            onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-          >
-            Next
-          </Button>
-        </div>
       </div>
 
-      {/* Users Table */}
-      <Table className="shadow-md">
-        <thead>
-          <tr>
-            <th>Date Created</th>
-            <th>User</th>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Admin</th>
-            <th>Edit</th>
-            <th>Delete</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y">
-          {filteredUsers.map((user) => (
-            <tr key={user._id} className="bg-white dark:bg-gray-800 dark:border-gray-700">
-              <td>{new Date(user.createdAt).toLocaleDateString()}</td>
-              <td>
-                <Avatar>
-                  {user.profilePicture ? (
-                    <AvatarImage src={user.profilePicture} alt={user.username} />
-                  ) : (
-                    <AvatarFallback>{user.username[0]}</AvatarFallback>
-                  )}
-                </Avatar>
-              </td>
-              <td>{user.username}</td>
-              <td>{user.email}</td>
-              <td>
-                {user.isAdmin ? <Check className="text-green-500" /> : <X className="text-red-500" />}
-              </td>
-              <td>
-                <span
-                  onClick={() => openEdit(user)}
-                  className="font-medium text-blue-500 hover:underline cursor-pointer"
-                >
-                  Edit
-                </span>
-              </td>
-              <td>
-                <span
-                  onClick={() => {
-                    setShowModal(true);
-                    setUserIdToDelete(user._id);
-                  }}
-                  className="font-medium text-red-500 hover:underline cursor-pointer"
-                >
-                  Delete
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+      {/* TABLE */}
+      <div className="overflow-x-auto">
+        <ScrollArea className="h-125 w-full rounded-lg border border-border">
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-muted">
+              <tr>
+                <th className="px-2 sm:px-4 py-2 text-xs font-semibold text-muted-foreground">Profile</th>
+                <th className="px-2 sm:px-4 py-2 text-xs font-semibold text-muted-foreground min-w-25">Username</th>
+                <th className="px-2 sm:px-4 py-2 text-xs font-semibold text-muted-foreground hidden sm:table-cell min-w-37.5">Email</th>
+                <th className="px-2 sm:px-4 py-2 text-xs font-semibold text-muted-foreground hidden md:table-cell">Role</th>
+                <th className="px-2 sm:px-4 py-2 text-xs font-semibold text-muted-foreground">Status</th>
+                <th className="px-2 sm:px-4 py-2 text-xs font-semibold text-muted-foreground">Actions</th>
+              </tr>
+            </thead>
 
-      {/* Edit User Modal */}
-      <UserFormModal
-        user={selectedUser}
-        open={editOpen}
-        onClose={() => {
-          setEditOpen(false);
-          setSelectedUser(null);
-        }}
-        onSave={handleSaveEdit}
-      />
+            <tbody className="divide-y divide-border">
+              {users.length > 0 ? users.map(user => (
+                <tr key={user.id} className="hover:bg-muted/50 transition">
+                  <td className="px-2 sm:px-4 py-2">
+                    <Avatar className="w-8 h-8">
+                      <AvatarFallback className="text-xs">{user.username[0]}</AvatarFallback>
+                    </Avatar>
+                  </td>
 
-      {/* Delete Confirmation Modal */}
-      <Modal show={showModal} onClose={() => setShowModal(false)} size="md">
-        <div className="text-center p-6">
-          <AlertCircle className="mx-auto mb-4 h-14 w-14 text-gray-400 dark:text-gray-200" />
-          <h3 className="mb-5 text-lg text-gray-500 dark:text-gray-400">
-            Are you sure you want to delete this user?
-          </h3>
-          <div className="flex justify-center gap-4">
-            <Button color="failure" onClick={handleDeleteUser}>
-              Yes, I\'m sure
-            </Button>
-            <Button color="gray" onClick={() => setShowModal(false)}>
-              No, cancel
-            </Button>
-          </div>
-        </div>
-      </Modal>
+                  <td className="px-2 sm:px-4 py-2">{user.username}</td>
+                  <td className="px-2 sm:px-4 py-2 hidden sm:table-cell truncate">{user.email}</td>
+
+                  <td className="px-2 sm:px-4 py-2 hidden md:table-cell">
+                    {user.roles[0]?.name|| 'No role'}
+                  </td>
+
+                  <td className="px-2 sm:px-4 py-2">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      user.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                    }`}>
+                      {user.status}
+                    </span>
+                  </td>
+
+                  <td className="px-2 sm:px-4 py-2 flex gap-1">
+                    <Button size="sm" variant="outline" disabled={user.status !== 'ACTIVE'} onClick={() => revokeUser(user.id)}>
+                      <Ban size={12} />
+                    </Button>
+                    <Button size="sm" variant="outline" disabled={user.status === 'ACTIVE'} onClick={() => grantUser(user.id)}>
+                      <RotateCcw size={12} />
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => deleteUser(user.id)}>
+                      <Trash size={12} />
+                    </Button>
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
+                    No users found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </ScrollArea>
+      </div>
+
+      {/* PAGINATION */}
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-2 mt-4">
+        <Button size="sm" disabled={currentPage === 0} onClick={handlePrevPage}>Previous</Button>
+        <span className="text-sm text-muted-foreground">Page {currentPage + 1} of {totalPages}</span>
+        <Button size="sm" disabled={currentPage + 1 === totalPages} onClick={handleNextPage}>Next</Button>
+      </div>
     </div>
   );
 }

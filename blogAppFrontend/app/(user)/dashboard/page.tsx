@@ -1,30 +1,50 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import UserSidebar from "@/components/UserDashboard/UserSidebar";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
+
+import { useSearchParams} from "next/navigation";
 import CreatePost from "@/components/UserDashboard/CreatePost";
-import UserProfile from "@/components/UserDashboard/UserProfile";
 import MyPosts from "@/components/UserDashboard/MyPosts";
+import UserProfile from "@/components/UserDashboard/UserProfile";
+import type { RootState } from "@/redux/store";
+import { loadToken } from "@/redux/auth/authSlice";
+
 
 export default function UserDashboard() {
   const searchParams = useSearchParams();
-  const tab = searchParams.get("tab") ?? "posts"; // default to "posts" instead of "dash"
+  const tab = searchParams.get("tab") ?? "create-post";
+
+  const dispatch = useDispatch();
+  const router = useRouter();
+
+  const { isAuthenticated, loading } = useSelector((state: RootState) => state.auth);
+
+  useEffect(() => {
+    dispatch(loadToken());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      router.push("/auth/sign-in");
+    }
+  }, [isAuthenticated, loading, router]);
+
+    if (loading || !isAuthenticated) return null; // prevent UI flicker
+
+
+
 
   return (
-    <div className="flex mt-20 bg-slate-50 dark:bg-slate-950 min-h-screen">
-      {/* Sidebar */}
-      <div className="hidden md:block sticky top-16 h-[calc(100vh-64px)]">
-        <UserSidebar activeTab={tab} />
-      </div>
+    <div className="flex mt-20 bg-slate-50 dark:bg-slate-950">
 
       {/* Main Content Area */}
       <main className="flex-1 p-6 md:p-10 min-h-[calc(100vh-64px)]">
         <div className="max-w-5xl mx-auto">
           <div className="mb-8 uppercase tracking-widest text-xs font-bold text-slate-500">
-            User Dashboard / {tab.replace("-", " ")}
+            {tab.replace('-', ' ')}
           </div>
-
-          {/* Render content based on tab */}
           {tab === "create-post" && <CreatePost />}
           {tab === "posts" && <MyPosts />}
           {tab === "profile" && <UserProfile />}

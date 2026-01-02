@@ -1,13 +1,8 @@
-
-
 package com.blogApplication.blogApp.config;
-
 import com.blogApplication.blogApp.auths.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -31,34 +26,39 @@ public class SecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(Customizer.withDefaults()) // Enable CORS properly
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Important for JWT
+                .cors(Customizer.withDefaults())
+
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-<<<<<<< HEAD
-                        .requestMatchers("/api/auth/**").permitAll() // login & register
-                        .requestMatchers("/api/sign-up**").permitAll()
-                        .requestMatchers("/api/users/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
-=======
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow CORS preflight
-                        .requestMatchers("/api/users/user/register").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll() // Allow all auth endpoints
-                        .requestMatchers("/api/**").permitAll()
-//                        .requestMatchers("/api/users/admin/**").hasRole("ADMIN") // Admin-only endpoints
-                        .anyRequest().authenticated() // Everything else requires authentication
->>>>>>> main
-                )
+
+                        .requestMatchers("/api/posts/public/**").permitAll()
+
+                        .requestMatchers("/api/auth/**").permitAll()
+
+                        .requestMatchers("/api/categories/list").permitAll()
+
+                        .requestMatchers("/api/admin/**").hasAuthority(RoleInitializer.PERMISSION_VIEW_ALL_USERS)
+
+                        .requestMatchers("/api/user/**").hasAuthority(RoleInitializer.PERMISSION_CREATE_ACCOUNT)
+
+                        .anyRequest().authenticated())
+
+
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
+
         return new BCryptPasswordEncoder();
     }
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 }
+

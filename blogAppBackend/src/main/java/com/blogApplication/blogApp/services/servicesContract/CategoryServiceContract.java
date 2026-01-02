@@ -10,19 +10,6 @@ public interface CategoryServiceContract {
     List<CategoryDto> getAllCategories();
     CategoryDto getCategoryById(long id);
     CategoryDto createCategory(CategoryDto categoryDto);
-    CategoryDto updateCategory(long id, CategoryDto categoryDto);
     CategoryDto deleteCategory(long id);
 
-    Page<CategoryDto> getAllCategoriesByPage(
-            int pageNumber,
-            int pageSize,
-            Sort sort
-    );
-
-    Page<CategoryDto> searchCategories(
-            String keyword,
-            int pageNumber,
-            int pageSize,
-            Sort sort
-    );
 }

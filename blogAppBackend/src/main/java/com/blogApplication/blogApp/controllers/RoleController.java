@@ -1,69 +1,81 @@
 package com.blogApplication.blogApp.controllers;
 
 import com.blogApplication.blogApp.dto.roleDto.RoleDto;
-import com.blogApplication.blogApp.dto.userDto.RegisterRequestDto;
-import com.blogApplication.blogApp.dto.userDto.UserResponseDto;
-import com.blogApplication.blogApp.dto.userDto.UserUpdateDto;
-import com.blogApplication.blogApp.services.servicesImpl.RoleServiceImpl;
-import com.blogApplication.blogApp.services.servicesImpl.UserServiceImpl;
+import com.blogApplication.blogApp.payloads.ApiResponse;
+import com.blogApplication.blogApp.services.servicesContract.RoleServiceContract;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
-
 
 @RestController
 @RequestMapping("/api/roles")
 @RequiredArgsConstructor
 public class RoleController {
 
-    @Autowired
-    private RoleServiceImpl  roleService;
+    private final RoleServiceContract roleService;
 
-
-    //  GET METHOD TO LIST ALL ROLE
-
+    // ================= GET ALL ROLES =================
     @GetMapping("/role-list")
-    public ResponseEntity<List<RoleDto>> getAllRoles() {
-        return ResponseEntity.ok(roleService.getAllRoles());
+    public ResponseEntity<ApiResponse<List<RoleDto>>> getAllRoles() {
+        try {
+            List<RoleDto> roles = roleService.getAllRoles();
+            return ResponseEntity.ok(new ApiResponse<>(true, "Roles fetched successfully", roles));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new ApiResponse<>(false, "Failed to fetch roles: " + e.getMessage(), null));
+        }
     }
 
-    // POST METHOD TO ADD NEW ROLE
-
+    // ================= CREATE NEW ROLE =================
     @PostMapping("/role/create")
-    public ResponseEntity<RoleDto> createRole(@RequestBody RoleDto roleDto) {
-
-        return new ResponseEntity<>(roleService.createRole(roleDto), HttpStatus.CREATED);
+    public ResponseEntity<ApiResponse<RoleDto>> createRole(@RequestBody RoleDto roleDto) {
+        try {
+            RoleDto createdRole = roleService.createRole(roleDto);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new ApiResponse<>(true, "Role created successfully", createdRole));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false, "Failed to create role: " + e.getMessage(), null));
+        }
     }
 
-    // GET METHOD TO GET SINGLE ROLE
-
+    // ================= GET SINGLE ROLE =================
     @GetMapping("/role/{id}")
-    public ResponseEntity<RoleDto> getRoleById(@PathVariable Long id) {
-        return  ResponseEntity.ok(roleService.getRoleById(id));
+    public ResponseEntity<ApiResponse<RoleDto>> getRoleById(@PathVariable Long id) {
+        try {
+            RoleDto role = roleService.getRoleById(id);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Role fetched successfully", role));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false, "Failed to fetch role: " + e.getMessage(), null));
+        }
     }
-    //PUT METHOD TO UPDATE EXISTING ROLE
 
+    // ================= UPDATE ROLE =================
     @PutMapping("/role/{id}")
-    public ResponseEntity<RoleDto> updateRole(@RequestBody RoleDto roleDto, @PathVariable Long id) {
-        RoleDto updatedRole = roleService.updateRole(id, roleDto);
-        return ResponseEntity.ok(updatedRole);
-
+    public ResponseEntity<ApiResponse<RoleDto>> updateRole(@RequestBody RoleDto roleDto, @PathVariable Long id) {
+        try {
+            RoleDto updatedRole = roleService.updateRole(id, roleDto);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Role updated successfully", updatedRole));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false, "Failed to update role: " + e.getMessage(), null));
+        }
     }
 
-
-    // DELETE METHOD TO DELETE ROLE BY USING ID
-
+    // ================= DELETE ROLE =================
     @DeleteMapping("/role/admin/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        RoleDto deletedRole = roleService.deleteRole(id);
-        return ResponseEntity.ok(Map.of("message", "User deleted successfully", "data", deletedRole));
+    public ResponseEntity<ApiResponse<String>> deleteRole(@PathVariable long id) {
+        try {
+            roleService.deleteRole(id);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Role deleted successfully", null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false, "Failed to delete role: " + e.getMessage(), null));
+        }
     }
-
 }

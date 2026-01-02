@@ -4,6 +4,9 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Heart, MoreHorizontal, Send, ChevronDown, UploadCloud, X } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "flowbite-react/components/Textarea";
+import { Input } from "@/components/ui/input";
 
 /* ================= TYPES ================= */
 export interface Comment {
@@ -210,7 +213,7 @@ export default function PostDetail() {
 
   const renderReplies = (replies: NestedReply[], level = 1) => replies.map(r => (
     <div key={r.id} className="space-y-1">
-      <div className="flex justify-between items-center pl-4" style={{ marginLeft: `${level * 16}px` }}>
+      <div className="flex justify-between items-center pl-4" >
         <span>{r.text}</span>
         <div className="relative">
           <MoreHorizontal size={16} className="cursor-pointer text-gray-500" onClick={() => setMenuOpenId(menuOpenId === r.id ? null : r.id)} />
@@ -225,8 +228,8 @@ export default function PostDetail() {
       </div>
 
       {replyOpenId === r.id && (
-        <div className="flex gap-2 mt-1 pl-4" style={{ marginLeft: `${level * 16}px` }}>
-          <input
+        <div className="flex gap-2 mt-1 pl-4">
+          <Input
             type="text"
             placeholder="Write a reply..."
             value={replyTexts[r.id] || ""}
@@ -234,9 +237,9 @@ export default function PostDetail() {
             onKeyDown={(e) => { if(e.key === "Enter") addNestedReply(r.id, replyTexts[r.id]); }}
             className="flex-1 p-1 border rounded text-sm"
           />
-          <button className="p-2 bg-blue-600 rounded text-white flex items-center justify-center" onClick={() => addNestedReply(r.id, replyTexts[r.id])}>
+          <Button className="p-2 bg-blue-600 rounded text-white flex items-center justify-center" onClick={() => addNestedReply(r.id, replyTexts[r.id])}>
             <Send size={16} />
-          </button>
+          </Button>
         </div>
       )}
 
@@ -248,8 +251,8 @@ export default function PostDetail() {
     <div className="max-w-2xl mx-auto space-y-6 p-4 mt-20">
       {editMode ? (
         <div className="space-y-2">
-          <input type="text" value={editedTitle} onChange={(e) => setEditedTitle(e.target.value)} className="w-full border rounded px-2 py-1 text-lg font-bold" />
-          <textarea value={editedContent} onChange={(e) => setEditedContent(e.target.value)} className="w-full border rounded px-2 py-1 text-sm" rows={3} />
+          <Input type="text" value={editedTitle} onChange={(e) => setEditedTitle(e.target.value)} className="w-full border rounded px-2 py-1 text-lg font-bold" />
+          <Textarea value={editedContent} onChange={(e) => setEditedContent(e.target.value)} className="w-full border rounded px-2 py-1 text-sm" rows={3} />
           <div className="flex flex-wrap gap-2 mt-2">
             {categories.map(cat => (
               <button key={cat} onClick={() => setEditedCategory(cat)} className={`px-3 py-1 rounded ${editedCategory===cat?'bg-blue-600 text-white':'bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-slate-300'}`}>{cat}</button>
@@ -264,7 +267,7 @@ export default function PostDetail() {
             {editedImage && (
               <div className="relative">
                 <img src={editedImage} className="max-h-40 rounded" alt="preview" />
-                <button className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1" onClick={() => setEditedImage(undefined)}><X size={12} /></button>
+                <Button className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1" onClick={() => setEditedImage(undefined)}><X size={12} /></Button>
               </div>
             )}
           </div>
@@ -277,7 +280,7 @@ export default function PostDetail() {
             {editedVideo && (
               <div className="relative">
                 <video controls className="max-h-40 rounded"><source src={editedVideo} /></video>
-                <button className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1" onClick={() => setEditedVideo(undefined)}><X size={12} /></button>
+                <Button className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1" onClick={() => setEditedVideo(undefined)}><X size={12} /></Button>
               </div>
             )}
           </div>
@@ -292,8 +295,8 @@ export default function PostDetail() {
           <h1 className="text-xl font-bold">{post.title}</h1>
           <p className="text-sm text-slate-500">{post.category} • {post.date}</p>
           <p className="text-sm text-slate-700 dark:text-slate-300">{post.content}</p>
-          {post.image && <img src={post.image} className="w-full max-h-[400px] object-cover rounded-lg" />}
-          {post.video && <video controls className="w-full max-h-[400px] rounded-lg mt-2"><source src={post.video} /></video>}
+          {post.image && <img src={post.image} alt="post image" className="w-full max-h-100 object-cover rounded-lg" />}
+          {post.video && <video controls className="w-full max-h-100 rounded-lg mt-2"><source src={post.video} /></video>}
           <button className="mt-2 px-3 py-1 bg-blue-500 text-white rounded" onClick={()=>setEditMode(true)}>Edit Post</button>
         </>
       )}
@@ -325,7 +328,7 @@ export default function PostDetail() {
             {replyOpenId===c.id && (
               <div className="flex gap-2 mt-1">
                 <input type="text" placeholder="Write a reply..." value={replyTexts[c.id]||""} onChange={e=>setReplyTexts(prev=>({...prev,[c.id]:e.target.value}))} onKeyDown={e=>{if(e.key==="Enter") addNestedReply(c.id, replyTexts[c.id])}} className="flex-1 p-1 border rounded text-sm" />
-                <button className="p-2 bg-blue-600 rounded text-white flex items-center justify-center" onClick={()=>addNestedReply(c.id, replyTexts[c.id])}><Send size={16}/></button>
+                <Button className="p-2 bg-blue-600 rounded text-white flex items-center justify-center" onClick={()=>addNestedReply(c.id, replyTexts[c.id])}><Send size={16}/></Button>
               </div>
             )}
 

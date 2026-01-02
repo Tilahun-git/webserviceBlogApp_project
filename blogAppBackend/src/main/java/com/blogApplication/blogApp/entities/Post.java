@@ -32,7 +32,7 @@ public class Post {
     private String content;
 
     @Column(name = "media_type")
-    private String mediaType; // IMAGE, VIDEO, NONE
+    private String mediaType;
 
     @Column(name = "media_url")
     private String mediaUrl;
@@ -62,5 +62,7 @@ public class Post {
     private Set<Comment> comments = new HashSet<>();
 
 
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Like> likes = new HashSet<>();
 
 }
