@@ -12,20 +12,10 @@ public interface CommentServiceContract {
      CommentResponseDto addComment(long postId, long userId, CommentRequestDto commentDto);
      CommentResponseDto updateComment(long commentId, long userId, CommentRequestDto commentDto);
      void deleteComment(long commentId, long userId);
-     Page<CommentResponseDto> getCommentsByPost(
-             long postId,
-             int pageNumber,
-             int pageSize,
-             Sort sort
+     List <CommentResponseDto> getCommentsByPostId(
+             long postId
      );
 
-     Page<CommentResponseDto> searchCommentsInPost(
-             long postId,
-             String keyword,
-             int pageNumber,
-             int pageSize,
-             Sort sort
-     );
 }
 
 

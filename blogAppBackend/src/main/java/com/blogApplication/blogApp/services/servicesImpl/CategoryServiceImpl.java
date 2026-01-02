@@ -5,6 +5,8 @@ import com.blogApplication.blogApp.entities.Category;
 import com.blogApplication.blogApp.exceptions.ResourceNotFoundException;
 import com.blogApplication.blogApp.repositories.CategoryRepo;
 import com.blogApplication.blogApp.services.servicesContract.CategoryServiceContract;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,10 +23,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryServiceContract {
-    @Autowired
-    private CategoryRepo categoryRepo;
-    @Autowired
-    private ModelMapper modelMapper;
+    private final CategoryRepo categoryRepo;
+    private final ModelMapper modelMapper;
 
 
     @Override
@@ -42,56 +43,26 @@ public class CategoryServiceImpl implements CategoryServiceContract {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('CREATE_CATEGORY')")
     public CategoryDto createCategory(CategoryDto categoryDto) {
+
+        if (categoryRepo.existsByTitle(categoryDto.getTitle())) {
+            throw new RuntimeException("Category with title '" + categoryDto.getTitle() + "' already exists");
+        }
+
         Category categoryTobeCreated = modelMapper.map(categoryDto, Category.class);
         categoryRepo.save(categoryTobeCreated);
         return modelMapper.map(categoryTobeCreated, CategoryDto.class);
-
     }
 
-    @Override
-    public CategoryDto updateCategory(long id, CategoryDto categoryDto) {
-        Category categoryTobeUpdated = categoryRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("Category","id",id));
-        categoryTobeUpdated.setTitle(categoryDto.getTitle());
-        Category updatedCategory = categoryRepo.save(categoryTobeUpdated);
-        return modelMapper.map(updatedCategory, CategoryDto.class);
-    }
 
     @Override
+    @PreAuthorize("hasAuthority('DELETE_CATEGORY')")
     public CategoryDto deleteCategory(long id) {
         Category  deletedCategory = categoryRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("Category","id",id));
         categoryRepo.delete(deletedCategory);
         return modelMapper.map(deletedCategory, CategoryDto.class);
 
     }
-
-    public Page<CategoryDto> getAllCategoriesByPage(
-            int pageNumber,
-            int pageSize,
-            Sort sort) {
-
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-
-        Page<Category> page = categoryRepo.findAll(pageable);
-
-        return page.map(category -> modelMapper.map(category, CategoryDto.class));
-    }
-
-    @Override
-    public Page<CategoryDto> searchCategories(
-            String keyword,
-            int pageNumber,
-            int pageSize,
-            Sort sort
-    ) {
-
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-
-        Page<Category> page =
-                categoryRepo.findByTitleContainingIgnoreCase(keyword, pageable);
-
-        return page.map(category -> modelMapper.map(category, CategoryDto.class));
-    }
-
 
 }

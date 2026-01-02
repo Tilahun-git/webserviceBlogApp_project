@@ -1,5 +1,6 @@
 package com.blogApplication.blogApp.entities;
 
+import com.blogApplication.blogApp.payloads.UserStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,15 +22,12 @@ import java.util.UUID;
 @Setter
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) //@UUIDGenerator
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Long id;
 
     @Column
     private String firstName;
-
-    @Column
-
-    private String profilePicture; // <-- add this field
 
     @Column
     private String lastName;
@@ -43,6 +41,24 @@ public class User {
     @Column(unique = true,nullable = false)
     private String email;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserStatus status = UserStatus.ACTIVE;
+
+    private boolean isDeleted;
+
+    @Column(name = "profile_media_url")
+    private String mediaUrl;
+
+    @Column(name="password_reset_token")
+    private String passwordResetToken;
+
+    @Column(name = "token_expiry_date")
+    private LocalDateTime tokenExpiryDate;
+
+    @Column(name = "is_token_validated")
+    private boolean tokenValidated = false;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -51,9 +67,11 @@ public class User {
     @Column
     private LocalDateTime updatedAt;
 
-    @ManyToMany(
-            fetch = FetchType.EAGER,
-            cascade = CascadeType.PERSIST
+    private LocalDateTime deletedAt;
+
+
+    @ManyToMany(fetch = FetchType.EAGER
+
     )
     @JoinTable(
             name = "user_roles",
@@ -77,6 +95,50 @@ public class User {
             orphanRemoval = true
     )
     private Set<Comment> comments = new HashSet<>();
+
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+     Set<String> roleNames = new HashSet<>();
+
+    public boolean hasRole(String roleName) {
+        return this.roles.stream()
+                .anyMatch(role -> role.getName() != null && role.getName().equals(roleName));
+    }
+public Set<String> getRoleNames() {
+    Set<String> roleNames = new HashSet<>();
+    for (Role role : this.roles) {
+        if (role.getName() != null) {
+            roleNames.add(role.getName());
+        }
+    }
+    return roleNames;
+}
+
+
+
+// Helper method to add role
+
+    public void addRole(Role role) {
+        this.roles.add(role);
+        role.getUsers().add(this);
+    }
+
+    // Helper method to remove role
+
+    public void removeRole(Role role) {
+        this.roles.remove(role);
+        role.getUsers().remove(this);
+    }
 
 
 }

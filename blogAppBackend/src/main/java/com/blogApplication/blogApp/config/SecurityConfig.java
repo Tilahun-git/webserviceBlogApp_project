@@ -1,10 +1,8 @@
 package com.blogApplication.blogApp.config;
-
 import com.blogApplication.blogApp.auths.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -29,21 +27,23 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
+
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
+
+                        .requestMatchers("/api/posts/public/**").permitAll()
+
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/posts/public").permitAll()
-                        .requestMatchers("/api/user/register").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Admin endpoints
-                        .requestMatchers("/api/users/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/categories/list").permitAll()
 
-                        // Any other request must be authenticated
-                        .anyRequest().authenticated()
-                )
-                // Add JWT filter before UsernamePasswordAuthenticationFilter
+                        .requestMatchers("/api/admin/**").hasAuthority(RoleInitializer.PERMISSION_VIEW_ALL_USERS)
+
+                        .requestMatchers("/api/user/**").hasAuthority(RoleInitializer.PERMISSION_CREATE_ACCOUNT)
+
+                        .anyRequest().authenticated())
+
+
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -51,11 +51,14 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
+
         return new BCryptPasswordEncoder();
     }
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 }
+

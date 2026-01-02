@@ -1,15 +1,15 @@
 package com.blogApplication.blogApp.auths;
 
-import com.blogApplication.blogApp.services.servicesImpl.SecurityService;
+import com.blogApplication.blogApp.entities.User;
+import com.blogApplication.blogApp.repositories.UserRepo;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -17,14 +17,21 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    @Autowired
     private final JwtUtil jwtUtil;
-
-    @Autowired
     private final SecurityService securityService;
+    private final UserRepo userRepo;
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+
+        return path.startsWith("/api/auth/")
+                || path.startsWith("/api/posts/public/")
+                || path.equals("/api/categories/list");
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -32,42 +39,72 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 1. HANDLES THE PREFLIGHT (OPTIONS) REQUEST
-        // This prevents the filter from trying to validate a JWT on a handshake request
+        // Skip OPTIONS requests (CORS preflight)
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            response.setStatus(HttpServletResponse.SC_OK);
+            filterChain.doFilter(request, response);
             return;
         }
 
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String jwt = authHeader.substring(7);
+        // No token → just continue (do NOT block)
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
+        String jwtToken = authHeader.substring(7);
+        String username;
+
+        try {
+            username = jwtUtil.extractUsername(jwtToken);
+        } catch (ExpiredJwtException e) {
+            sendErrorResponse(response, "Token expired. Please login again.");
+            return;
+        } catch (Exception e) {
+            sendErrorResponse(response, "Invalid token");
+            return;
+        }
+
+        // Authenticate user if not already authenticated
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
-                String username = jwtUtil.extractUsername(jwt);
+                User user = userRepo.findByUsername(username)
+                        .orElseThrow(() -> new RuntimeException("User not found"));
 
-                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    UserDetails userDetails = securityService.loadUserByUsername(username);
+                CustomUserDetails customUserDetails = CustomUserDetails.build(user);
 
-                    if (jwtUtil.isTokenValid(jwt, userDetails)) {
-                        UsernamePasswordAuthenticationToken authToken =
-                                new UsernamePasswordAuthenticationToken(
-                                        userDetails, null, userDetails.getAuthorities());
+                if (jwtUtil.isTokenValid(jwtToken, customUserDetails)) {
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    customUserDetails,
+                                    null,
+                                    customUserDetails.getAuthorities()
+                            );
 
-                        authToken.setDetails(
-                                new WebAuthenticationDetailsSource().buildDetails(request));
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request)
+                    );
 
-                        SecurityContextHolder.getContext().setAuthentication(authToken);
-                    }
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else {
+                    sendErrorResponse(response, "Token expired or invalid");
+                    return;
                 }
+
             } catch (Exception e) {
-                // If token extraction fails, we just continue the chain
-                // Spring Security will handle the 403/401 later based on your config
-                logger.error("Could not set user authentication in security context", e);
+                sendErrorResponse(response, "Authentication failed: " + e.getMessage());
+                return;
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void sendErrorResponse(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter()
+                .write("{\"success\": false, \"message\": \"" + message + "\", \"data\": null}");
     }
 }

@@ -16,4 +16,7 @@ public interface CategoryRepo extends JpaRepository<Category, Long> {
             Pageable pageable
     );
 
+//    boolean existsByCategoryTitle(void attr0);
+
+    boolean existsByTitle(String attr0);
 }

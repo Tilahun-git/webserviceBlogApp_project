@@ -17,7 +17,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -25,17 +29,14 @@ import org.springframework.stereotype.Service;
 public class CommentServiceImpl implements CommentServiceContract {
 
 
-    @Autowired
     private final CommentRepo commentRepo;
-    @Autowired
     private final PostRepo postRepo;
-    @Autowired
     private final UserRepo userRepo;
-    @Autowired
     private final ModelMapper modelMapper;
 
 
     @Override
+    @PreAuthorize("hasAuthority(T(com.blogApplication.blogApp.config.RoleInitializer).PERMISSION_COMMENT_POST)")
     public CommentResponseDto addComment(long postId, long userId, CommentRequestDto commentDto) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
@@ -59,6 +60,7 @@ public class CommentServiceImpl implements CommentServiceContract {
 
     // Update comment
     @Override
+    @PreAuthorize("hasAuthority(T(com.blogApplication.blogApp.config.RoleInitializer).PERMISSION_COMMENT_POST)")
     public CommentResponseDto updateComment(long commentId, long userId, CommentRequestDto commentDto) {
         Comment comment = commentRepo.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", commentId));
@@ -78,6 +80,7 @@ public class CommentServiceImpl implements CommentServiceContract {
 
     // Delete comment
     @Override
+    @PreAuthorize("hasAuthority(T(com.blogApplication.blogApp.config.RoleInitializer).PERMISSION_COMMENT_POST)")
     public void deleteComment(long commentId, long userId) {
         Comment comment = commentRepo.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", commentId));
@@ -91,54 +94,13 @@ public class CommentServiceImpl implements CommentServiceContract {
 
 
     @Override
-    public Page<CommentResponseDto> getCommentsByPost(
-            long postId,
-            int pageNumber,
-            int pageSize,
-            Sort sort
-    ) {
-        Post post = postRepo.findById(postId)
-                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
+    public List<CommentResponseDto> getCommentsByPostId(long postId) {
+        List <Comment> comments = commentRepo.findByPostIdOrderByCreatedAtDesc(postId);
+        return comments.stream().map(comment -> modelMapper.map(comment, CommentResponseDto.class)).collect(Collectors.toList());
 
-
-
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-
-        Page<Comment> commentPage = commentRepo.findByPost(post, pageable);
-
-        return commentPage.map(comment -> {
-            CommentResponseDto dto = modelMapper.map(comment, CommentResponseDto.class);
-            dto.setUsername(comment.getUser().getUsername());
-            dto.setPostId(comment.getPost().getId());
-            return dto;
-        });
     }
 
-    @Override
-    public Page<CommentResponseDto> searchCommentsInPost(
-            long postId,
-            String keyword,
-            int pageNumber,
-            int pageSize,
-            Sort sort
-    ) {
-        Post post = postRepo.findById(postId)
-                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
 
-
-
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-
-        Page<Comment> commentPage =
-                commentRepo.findByPostAndContentContainingIgnoreCase(post, keyword, pageable);
-
-        return commentPage.map(comment -> {
-            CommentResponseDto dto = modelMapper.map(comment, CommentResponseDto.class);
-            dto.setUsername(comment.getUser().getUsername());
-            dto.setPostId(comment.getPost().getId());
-            return dto;
-        });
-    }
 
 
 
