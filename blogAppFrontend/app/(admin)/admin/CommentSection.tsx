@@ -4,8 +4,25 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+<<<<<<< HEAD:blogAppFrontend/app/admin/CommentSection.tsx
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+import { AlertTriangle } from "lucide-react";
+import Comment from "../../components/Comment";
+=======
 import Comment from "./Comment";
 import { Loader2, Send } from "lucide-react";
+>>>>>>> main:blogAppFrontend/components/CommentSection.tsx
 
 type CommentData = {
   id: number;
