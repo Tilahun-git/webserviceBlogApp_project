@@ -30,31 +30,6 @@ public class AuthController {
     private final UserRepo userRepo;
     private final RoleRepo roleRepo;
 
-    //------------------ LOGIN USER --------------------------
-//    @PostMapping("/login")
-//    public ResponseEntity<ApiResponse<LoginResponseDto>> login(@RequestBody LoginRequestDto request) {
-//
-//        try {
-//            authenticationManager.authenticate(
-//                    new UsernamePasswordAuthenticationToken(
-//                            request.getUsername(),
-//                            request.getPassword()
-//                    )
-//            );
-//        } catch (BadCredentialsException ex) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-//                    new ApiResponse<>(false, "Invalid username or password", null)
-//            );
-//        }
-//
-//        // 🔥 Everything below is executed ONLY if authentication succeeds
-//        String token = jwtUtil.generateToken(request.getUsername());
-//        LoginResponseDto loginResponse = new LoginResponseDto(token);
-//
-//        return ResponseEntity.ok(
-//                new ApiResponse<>(true, "Login successful", loginResponse)
-//        );
-//    }
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponseDto>> login(
             @RequestBody LoginRequestDto request) {
