@@ -1,0 +1,12 @@
+target/
+.git/
+.gitignore
+.idea/
+.vscode/
+*.iml
+*.log
+application-local.properties
+*.p12
+*.jks
+*.keystore
+README.md

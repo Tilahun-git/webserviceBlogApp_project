@@ -276,7 +276,7 @@ public class UserServiceImpl implements UserServiceContract {
 //
     User existingUser = userRepo.findByUsername(username)
             .orElseThrow(() -> new RuntimeException("User not found"));
-        modelMapper.map(userDto, existingUser); // map into existingUser
+        modelMapper.map(userDto, existingUser);
         if(profileMedia != null && !profileMedia.isEmpty()) {
             existingUser.setMediaUrl(cloudinaryMediaService.uploadMedia(profileMedia));
         }else {

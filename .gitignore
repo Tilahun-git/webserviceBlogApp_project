@@ -20,51 +20,94 @@ logs/
 ############################
 # Environment / Secrets
 ############################
+# Real secrets — never commit
 .env
 .env.*
 env.local
-application.properties
-application.yml
-application-*.properties
-application-*.yml
+application-local.properties
+application-local.yml
+application-dev.properties
+application-dev.yml
+application-prod.properties
+application-prod.yml
+application-secret.properties
+application-secret.yml
+*.p12
+*.jks
+*.keystore
 
 ############################
 # Backend (Spring Boot / Java)
 ############################
-/blogAppBackend/target/
-/blogAppBackend/build/
-/blogAppBackend/out/
-/blogAppBackend/.gradle/
-/blogAppBackend/coverage/
-/blogAppBackend/jacoco/
-/blogAppBackend/.classpath
-/blogAppBackend/.project
-/blogAppBackend/.settings/
+# If backend is in a subfolder /blogAppBackend/
+blogAppBackend/target/
+blogAppBackend/build/
+blogAppBackend/out/
+blogAppBackend/.gradle/
+blogAppBackend/coverage/
+blogAppBackend/jacoco/
+blogAppBackend/.classpath
+blogAppBackend/.project
+blogAppBackend/.settings/
+
+# If backend is at repo root
+target/
+build/
+out/
+.gradle/
+.classpath
+.project
+.settings/
 
 ############################
 # Frontend (Next.js / Node)
 ############################
-/blogAppFrontend/node_modules/
-/blogAppFrontend/.pnp
-/blogAppFrontend/.pnp.*
-/blogAppFrontend/.yarn/*
-!/blogAppFrontend/.yarn/patches
-!/blogAppFrontend/.yarn/plugins
-!/blogAppFrontend/.yarn/releases
-!/blogAppFrontend/.yarn/versions
+# If frontend is in a subfolder /blogAppFrontend/
+blogAppFrontend/node_modules/
+blogAppFrontend/.pnp
+blogAppFrontend/.pnp.*
+blogAppFrontend/.yarn/*
+!blogAppFrontend/.yarn/patches
+!blogAppFrontend/.yarn/plugins
+!blogAppFrontend/.yarn/releases
+!blogAppFrontend/.yarn/versions
 
-/blogAppFrontend/.next/
-/blogAppFrontend/out/
-/blogAppFrontend/build/
-/blogAppFrontend/coverage/
-/blogAppFrontend/.vercel
-/blogAppFrontend/.turbo
-/blogAppFrontend/.cache
+blogAppFrontend/.next/
+blogAppFrontend/out/
+blogAppFrontend/build/
+blogAppFrontend/coverage/
+blogAppFrontend/.vercel
+blogAppFrontend/.turbo
+blogAppFrontend/.cache
 
 # Frontend env files
-/blogAppFrontend/.env
-/blogAppFrontend/.env.local
-/blogAppFrontend/env.local
+blogAppFrontend/.env
+blogAppFrontend/.env.local
+blogAppFrontend/env.local
+
+# If frontend is at repo root
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+.next/
+out/
+coverage/
+.vercel
+.turbo
+.cache
+
+# Root env files (Next.js)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 ############################
 # Debug
@@ -78,11 +121,12 @@ yarn-error.log*
 # TypeScript
 ############################
 *.tsbuildinfo
-/blogAppFrontend/next-env.d.ts
+next-env.d.ts
 
 ############################
-# Root Node (ignore ONLY if root is not Node project)
+# Misc
 ############################
-/node_modules/
-/package-lock.json
-/package.json
+.DS_Store
+*.pid
+*.seed
+*.pid.lock

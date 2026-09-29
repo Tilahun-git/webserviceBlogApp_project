@@ -1,9 +1,7 @@
 import axios, { AxiosResponse } from "axios";
 
-// ---------------- BASE URL ----------------
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || "https://localhost:8080";
 
-// ---------------- AUTH TYPES ----------------
 export interface SignupData {
   firstName: string;      
   lastName: string; 
@@ -17,7 +15,6 @@ export interface SigninData {
   password: string;
 }
 
-// ---------------- POST & CATEGORY TYPES ----------------
 export interface Post {
   id: number;
   title: string;
@@ -35,7 +32,6 @@ export interface Category {
   title: string;
 }
 
-// ---------------- USER TYPES ----------------
 export interface User {
   id: string;
   username: string;
@@ -45,31 +41,6 @@ export interface User {
   isAdmin: boolean;
   createdAt: string;
 }
-
-// // ---------------- AXIOS INSTANCE ----------------
-// export const axiosInstance = axios.create({
-//   baseURL: API_BASE_URL,
-//   headers: { 
-//     "Content-Type": "application/json",
-//     "Accept": "application/json"
-//   },
-//   withCredentials: false,
-//   timeout: 10000,
-// });
-
-// // Add token to requests if available
-// axiosInstance.interceptors.request.use(
-//   (config) => {
-//     const token = localStorage.getItem('token');
-//     if (token) {
-//       config.headers.Authorization = `Bearer ${token}`;
-//     }
-//     return config;
-//   },
-//   (error) => Promise.reject(error)
-// );
-
-
 // ---------------- AXIOS INSTANCE ----------------
 export const axiosInstance = axios.create({
   baseURL: API_BASE_URL,

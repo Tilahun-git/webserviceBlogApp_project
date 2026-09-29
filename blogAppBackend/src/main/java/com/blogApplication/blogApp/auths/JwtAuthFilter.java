@@ -1,15 +1,15 @@
 package com.blogApplication.blogApp.auths;
 
-import com.blogApplication.blogApp.entities.User;
-import com.blogApplication.blogApp.repositories.UserRepo;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -22,7 +22,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final SecurityService securityService;
-    private final UserRepo userRepo;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -34,9 +33,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
         // Skip OPTIONS requests (CORS preflight)
@@ -69,23 +68,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         // Authenticate user if not already authenticated
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
-                User user = userRepo.findByUsername(username)
-                        .orElseThrow(() -> new RuntimeException("User not found"));
-
-                CustomUserDetails customUserDetails = CustomUserDetails.build(user);
+//                User user = userRepo.findByUsername(username)
+//                        .orElseThrow(() -> new RuntimeException("User not found"));
+//
+//                CustomUserDetails customUserDetails = CustomUserDetails.build(user);
+                UserDetails customUserDetails = this.securityService.loadUserByUsername(username);
 
                 if (jwtUtil.isTokenValid(jwtToken, customUserDetails)) {
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(
                                     customUserDetails,
                                     null,
-                                    customUserDetails.getAuthorities()
-                            );
+                                    customUserDetails.getAuthorities());
 
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request)
-                    );
-
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 } else {
                     sendErrorResponse(response, "Token expired or invalid");
