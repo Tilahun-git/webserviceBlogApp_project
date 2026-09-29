@@ -59,9 +59,9 @@ export default function SignUpPage() {
   const handleTestConnection = async () => {
     const isWorking = await testSSLConnection();
     if (isWorking) {
-      alert('✅ SSL Connection is working! You can now register.');
+      alert('SSL Connection is working! You can now register.');
     } else {
-      alert('❌ SSL Certificate needs to be accepted. Click "Fix SSL Certificate" button.');
+      alert('SSL Certificate needs to be accepted. Click "Fix SSL Certificate" button.');
     }
   };
 
@@ -176,7 +176,7 @@ export default function SignUpPage() {
                     onClick={openSSLCertificatePage}
                     className="self-start"
                   >
-                    🔒 Fix SSL Certificate
+                   Fix SSL Certificate
                   </Button>
                 )}
               </div>

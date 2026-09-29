@@ -2,7 +2,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { signupApi, signInApi, SignupData, SigninData } from '@/lib/api';
 
-/* ---------- SIGN UP ---------- */
 export const signUpUser = createAsyncThunk(
     'auth/signUp',
     async (data: SignupData, { rejectWithValue }) => {
