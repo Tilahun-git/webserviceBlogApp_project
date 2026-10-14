@@ -23,10 +23,6 @@ public class CustomUserDetails implements UserDetails {
     private final Collection<? extends GrantedAuthority> authorities;
     private final boolean enabled;
 
-
-
-
-
     public static CustomUserDetails build(User user) {
         return new CustomUserDetails(
                 user.getId(),

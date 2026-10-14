@@ -10,13 +10,11 @@ const nextConfig: NextConfig = {
 
   images: {
     remotePatterns: [
-      // ✅ Cloudinary
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
       },
 
-      // ✅ Pexels (existing)
       {
         protocol: "https",
         hostname: "images.pexels.com",
