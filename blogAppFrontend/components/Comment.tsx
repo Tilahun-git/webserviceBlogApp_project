@@ -1,4 +1,3 @@
-// components/Comment.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -9,9 +8,6 @@ import { useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
-/* ================= TYPES ================= */
-
-// Align with your Post interface structure
 type CommentData = {
   id: number;
   content: string;

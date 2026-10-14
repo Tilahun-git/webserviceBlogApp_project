@@ -20,23 +20,16 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AdminController {
 
-
-
     private final UserServiceContract userService;
-
-
     @GetMapping("/counts")
     public ResponseEntity<ApiResponse<Map<String, Long>>> getDashboardCounts() {
         Map<String, Long> counts = userService.getDashboardCounts();
         ApiResponse<Map<String, Long>> response = new ApiResponse<>(
                 true,
                 "Dashboard statistics fetched successfully",
-                counts
-        );
+                counts);
         return ResponseEntity.ok(response);
     }
-
-
     @GetMapping("/users")
 //    @PreAuthorize("hasAuthority('VIEW_ALL_USERS')")
     public ResponseEntity<ApiResponse<Page<UserResponseDto>>> getAllUsers(
@@ -61,7 +54,6 @@ public class AdminController {
                     .body(new ApiResponse<>(false, "Failed to fetch users: " + e.getMessage(), null));
         }
     }
-    // -------------------- DELETE USER --------------------
     @DeleteMapping("/users/{id}")
     @PreAuthorize("hasAuthority('DELETE_USER')")
     public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
@@ -76,7 +68,6 @@ public class AdminController {
     }
 
 
-    // -------------------- SEARCH USERS --------------------
     @GetMapping("/users/filter")
     public ResponseEntity<ApiResponse<Page<UserResponseDto>>> searchUsers(
             @RequestParam String keyword,

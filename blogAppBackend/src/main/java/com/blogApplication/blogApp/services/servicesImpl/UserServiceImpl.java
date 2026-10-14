@@ -51,8 +51,6 @@ public class UserServiceImpl implements UserServiceContract {
         if (!roleName.equals(RoleInitializer.ROLE_ADMIN)) {
             return false;
         }
-
-        // Count users with ADMIN role
         List<User> adminUsers = userRepo.findByRoleName(RoleInitializer.ROLE_ADMIN);
         long activeAdmins = adminUsers.stream()
                 .filter(u -> u.getStatus() == UserStatus.ACTIVE)
@@ -66,13 +64,8 @@ public class UserServiceImpl implements UserServiceContract {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-
-
-//
         User currentUser = userRepo.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
-//        User user = userRepo.findById(currentUser).orElseThrow(() -> new RuntimeException("User not found"));
 
         return modelMapper.map(currentUser, UserResponseDto.class);
     }
@@ -122,19 +115,14 @@ public class UserServiceImpl implements UserServiceContract {
     public void deleteUser(long id) {
         User user = userRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 
-        // Soft delete
-//        user.setStatus(UserStatus.DELETED);
         user.setDeleted(true);
         user.setDeletedAt(LocalDateTime.now());
 
-        // Anonymize email to prevent reuse
         String anonymizedEmail = "deleted_" + System.currentTimeMillis() + "_" + user.getEmail();
         if (anonymizedEmail.length() > 255) {
             anonymizedEmail = anonymizedEmail.substring(0, 255);
         }
         user.setEmail(anonymizedEmail);
-
-        // Remove all roles
         user.getRoles().clear();
 
         userRepo.save(user);

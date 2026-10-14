@@ -4,11 +4,8 @@ import com.blogApplication.blogApp.dto.userDto.LoginRequestDto;
 import com.blogApplication.blogApp.dto.userDto.LoginResponseDto;
 import com.blogApplication.blogApp.dto.userDto.RegisterRequestDto;
 import com.blogApplication.blogApp.dto.userDto.UserResponseDto;
-import com.blogApplication.blogApp.entities.Role;
 import com.blogApplication.blogApp.entities.User;
-import com.blogApplication.blogApp.exceptions.ResourceNotFoundException;
 import com.blogApplication.blogApp.payloads.ApiResponse;
-import com.blogApplication.blogApp.repositories.RoleRepo;
 import com.blogApplication.blogApp.repositories.UserRepo;
 import com.blogApplication.blogApp.services.servicesImpl.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -28,20 +25,13 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final UserServiceImpl userService;
     private final UserRepo userRepo;
-    private final RoleRepo roleRepo;
-
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponseDto>> login(
             @RequestBody LoginRequestDto request) {
-
-        // 1️⃣ Authenticate credentials
         try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                             request.getUsername(),
-                            request.getPassword()
-                    )
-            );
+                            request.getPassword()));
         } catch (BadCredentialsException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ApiResponse<>(false, "Invalid username or password", null));
@@ -50,7 +40,6 @@ public class AuthController {
         User user = userRepo.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 3️⃣ Check roles using your helper methods
         boolean isAdmin = user.hasRole("ROLE_ADMIN");
         boolean isUser  = user.hasRole("ROLE_USER");
         LoginResponseDto response = null;
@@ -59,7 +48,6 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(new ApiResponse<>(false, "Unauthorized role", null));
         }
-
         String token = jwtUtil.generateToken(user.getUsername(), user.getRoleNames());
 
         if(isAdmin) {
@@ -67,16 +55,12 @@ public class AuthController {
         }else if(isUser) {
             response = new LoginResponseDto(token, "USER");
         }
-
         String message = isAdmin ? "Admin login successful" : "User login successful";
-
         return ResponseEntity.ok(
                 new ApiResponse<>(true, message, response)
         );
     }
 
-
-    // -------------------- REGISTER NEW USER --------------------
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<UserResponseDto>> registerUser(@RequestBody RegisterRequestDto userDto) {
         UserResponseDto createdUser = userService.registerUser(userDto);
