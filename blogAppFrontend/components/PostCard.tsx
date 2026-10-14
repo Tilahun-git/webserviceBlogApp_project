@@ -10,7 +10,7 @@ import * as motion from 'motion/react-client';
 
 interface PostCardProps {
   post: {
-    _id: string;
+    id: string;
     title: string;
     content: string;
     category: string;
@@ -21,6 +21,7 @@ interface PostCardProps {
     };
     likes?: number;
     comments?: number;
+    mediaUrl?: string;
   };
   currentUser?: { id: string; username: string } | null;
 }
@@ -36,14 +37,14 @@ export default function PostCard({ post, currentUser }: PostCardProps) {
     setLikesCount((prev) => (liked ? prev - 1 : prev + 1));
 
     // Optional: send to backend
-    // fetch(`/api/posts/${post._id}/like`, { method: 'POST' });
+    // fetch(`/api/posts/${post.id}/like`, { method: 'POST' });
   };
 
   const handleCommentClick = () => {
     if (!currentUser) {
-      return router.push(`/auth/sign-in?callbackUrl=/posts/${post._id}`);
+      return router.push(`/auth/sign-in?callbackUrl=/posts/${post.id}`);
     }
-    router.push(`/posts/${post._id}`);
+    router.push(`/posts/${post.id}`);
   };
 
   return (
@@ -55,12 +56,12 @@ export default function PostCard({ post, currentUser }: PostCardProps) {
       >
         <Card className="group cursor-pointer overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-card/50 backdrop-blur-xs py-0">
           <CardHeader className="p-0 relative">
-            {/* Card Image */}
+            {/* Card Image — the POST's image, not the author's */}
             <div className="w-full h-48 relative">
               <Image
                   fill
-                  src={post.author.profilePicture || '/default-user.png'}
-                  alt={post.author.username}
+                  src={post.mediaUrl || '/default-post.png'}
+                  alt={post.title}
                   className="object-cover"
               />
             </div>
@@ -75,7 +76,7 @@ export default function PostCard({ post, currentUser }: PostCardProps) {
               </Badge>
             </div>
 
-            {/* Author Info */}
+            {/* Author Info — small avatar */}
             <div className="absolute bottom-2 left-4 flex items-center gap-2 bg-background/70 backdrop-blur-xs p-1 rounded">
               <Image
                   src={post.author.profilePicture || '/default-user.png'}

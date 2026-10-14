@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -10,17 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { fetchPostById, toggleLikePost } from '@/lib/api';
-
-interface Post {
-  id: number;
-  title: string;
-  content: string;
-  mediaType?: string;
-  mediaUrl?: string;
-  likeCount?: number;
-  author: string;
-  categoryTitle: string;
-}
+import type { Post } from '@/lib/api';
 
 export default function PostDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -44,11 +33,11 @@ export default function PostDetailsPage() {
       try {
         setLoading(true);
         const postData = await fetchPostById(id as string);
-        
+
         if (!postData) {
           throw new Error('Post not found');
         }
-        
+
         setPost(postData);
         setLikes(postData.likeCount || 0);
       } catch (err) {
@@ -76,7 +65,7 @@ export default function PostDetailsPage() {
       setLikes(data.post.likeCount || 0);
       setLiked(data.likedByCurrentUser);
       toast.success(data.likedByCurrentUser ? 'Liked!' : 'Like removed');
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error('Failed to update like');
     }
@@ -108,34 +97,34 @@ export default function PostDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-gray-100 dark:from-neutral-900 dark:to-neutral-800">
-        <div className="text-center">
-          <Spinner className="w-12 h-12 text-teal-600 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-300">Loading post...</p>
+        <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-gray-100 dark:from-neutral-900 dark:to-neutral-800">
+          <div className="text-center">
+            <Spinner className="w-12 h-12 text-teal-600 mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-300">Loading post...</p>
+          </div>
         </div>
-      </div>
     );
   }
 
   if (!post) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-linear-to-br from-gray-50 to-gray-100 dark:from-neutral-900 dark:to-neutral-800">
-        <div className="text-center p-8">
-          <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-            <span className="text-4xl">📄</span>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-linear-to-br from-gray-50 to-gray-100 dark:from-neutral-900 dark:to-neutral-800">
+          <div className="text-center p-8">
+            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+              <span className="text-4xl">📄</span>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">
+              Post Not Found
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-6 max-w-md">
+              The post you&apos;re looking for doesn&apos;t exist or may have been removed.
+            </p>
+            <Button onClick={() => router.push('/blog')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Blog
+            </Button>
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">
-            Post Not Found
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-6 max-w-md">
-            The post you&apos;re looking for doesn&apos;t exist or may have been removed.
-          </p>
-          <Button onClick={() => router.push('/blog')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Blog
-          </Button>
         </div>
-      </div>
     );
   }
 
@@ -144,29 +133,29 @@ export default function PostDetailsPage() {
   const readTime = Math.ceil(wordCount / 200);
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-neutral-900 dark:to-neutral-800">
-      {/* Hero Section */}
-      <div className="relative bg-linear-to-r from-teal-600 via-blue-500 to-indigo-600 py-16">
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="relative max-w-5xl mx-auto px-4 text-center text-white">
-          <Badge className="mb-4 bg-white/20 backdrop-blur-sm text-white border-0 hover:bg-white/30">
-            {post.categoryTitle}
-          </Badge>
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-            {post.title}
-          </h1>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-white/90">
-            <div className="flex items-center gap-3">
-              <Image
-                src="/avatar.png"
-                alt={post.author}
-                width={40}
-                height={40}
-                className="rounded-full object-cover border-2 border-white"
-              />
-              <span className="font-medium">@{post.author}</span>
-            </div>
-            <div className="flex items-center gap-6">
+      <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-neutral-900 dark:to-neutral-800">
+        {/* Hero Section */}
+        <div className="relative bg-linear-to-r from-teal-600 via-blue-500 to-indigo-600 py-16">
+          <div className="absolute inset-0 bg-black/20" />
+          <div className="relative max-w-5xl mx-auto px-4 text-center text-white">
+            <Badge className="mb-4 bg-white/20 backdrop-blur-sm text-white border-0 hover:bg-white/30">
+              {post.categoryTitle}
+            </Badge>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+              {post.title}
+            </h1>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-white/90">
+              <div className="flex items-center gap-3">
+                <Image
+                    src={post.author.profilePicture || '/avatar.png'}
+                    alt={post.author.username}
+                    width={40}
+                    height={40}
+                    className="rounded-full object-cover border-2 border-white"
+                />
+                <span className="font-medium">@{post.author.username}</span>
+              </div>
+              <div className="flex items-center gap-6">
               <span className="flex items-center gap-2">
                 <Calendar size={16} />
                 {new Date().toLocaleDateString('en-US', {
@@ -175,180 +164,180 @@ export default function PostDetailsPage() {
                   year: 'numeric'
                 })}
               </span>
-              <span className="flex items-center gap-2">
+                <span className="flex items-center gap-2">
                 <Clock size={16} />
-                {readTime} min read
+                  {readTime} min read
               </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8 -mt-8 relative z-10">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
-          {/* Featured Image */}
-          {post.mediaUrl && (
-            <div className="relative h-64 md:h-80 lg:h-96">
-              <Image
-                src={post.mediaUrl}
-                alt={post.title}
-                fill
-                className="object-cover"
-                priority
-              />
-              <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent" />
-            </div>
-          )}
+        {/* Main Content */}
+        <div className="max-w-4xl mx-auto px-4 py-8 -mt-8 relative z-10">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+            {/* Featured Image */}
+            {post.mediaUrl && (
+                <div className="relative h-64 md:h-80 lg:h-96">
+                  <Image
+                      src={post.mediaUrl}
+                      alt={post.title}
+                      fill
+                      className="object-cover"
+                      priority
+                  />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent" />
+                </div>
+            )}
 
-          {/* Content */}
-          <div className="p-6 md:p-8 lg:p-10">
-            {/* Floating Action Bar */}
-            <div className="sticky top-6 mb-8 flex items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={handleLike}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                    liked
-                      ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  <Heart size={20} fill={liked ? 'currentColor' : 'none'} />
-                  <span className="font-semibold">{likes}</span>
-                </button>
+            {/* Content */}
+            <div className="p-6 md:p-8 lg:p-10">
+              {/* Floating Action Bar */}
+              <div className="sticky top-6 mb-8 flex items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
+                <div className="flex items-center gap-4">
+                  <button
+                      onClick={handleLike}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                          liked
+                              ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                  >
+                    <Heart size={20} fill={liked ? 'currentColor' : 'none'} />
+                    <span className="font-semibold">{likes}</span>
+                  </button>
 
-                <Button
-                  onClick={() => document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
-                >
-                  <MessageCircle size={20} />
-                  <span className="font-semibold">Comment</span>
-                </Button>
+                  <Button
+                      onClick={() => document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' })}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
+                  >
+                    <MessageCircle size={20} />
+                    <span className="font-semibold">Comment</span>
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleBookmark}
+                      className={`rounded-full hover:bg-amber-50 dark:hover:bg-amber-900/20 ${
+                          isBookmarked ? 'text-amber-500' : ''
+                      }`}
+                  >
+                    <Bookmark size={20} fill={isBookmarked ? 'currentColor' : 'none'} />
+                  </Button>
+                  <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleShare}
+                      className={`rounded-full hover:bg-green-50 dark:hover:bg-green-900/20 ${
+                          isSharing ? 'text-green-500' : ''
+                      }`}
+                  >
+                    <Share2 size={20} />
+                  </Button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleBookmark}
-                  className={`rounded-full hover:bg-amber-50 dark:hover:bg-amber-900/20 ${
-                    isBookmarked ? 'text-amber-500' : ''
-                  }`}
-                >
-                  <Bookmark size={20} fill={isBookmarked ? 'currentColor' : 'none'} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleShare}
-                  className={`rounded-full hover:bg-green-50 dark:hover:bg-green-900/20 ${
-                    isSharing ? 'text-green-500' : ''
-                  }`}
-                >
-                  <Share2 size={20} />
-                </Button>
+              {/* Article Content */}
+              <article className="prose prose-lg dark:prose-invert max-w-none mb-12">
+                <div className="whitespace-pre-line leading-relaxed text-gray-700 dark:text-gray-300 text-lg">
+                  {post.content}
+                </div>
+              </article>
+
+              {/* Category Badge */}
+              <div className="mb-12">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
+                  Category
+                </h3>
+                <Badge variant="secondary" className="px-4 py-2 text-base">
+                  {post.categoryTitle}
+                </Badge>
               </div>
-            </div>
 
-            {/* Article Content */}
-            <article className="prose prose-lg dark:prose-invert max-w-none mb-12">
-              <div className="whitespace-pre-line leading-relaxed text-gray-700 dark:text-gray-300 text-lg">
-                {post.content}
+              {/* Author Card */}
+              <div className="bg-linear-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 mb-12 border border-gray-200 dark:border-gray-700">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                  <Image
+                      src={post.author.profilePicture || '/avatar.png'}
+                      alt={post.author.username}
+                      width={100}
+                      height={100}
+                      className="rounded-full object-cover border-4 border-white dark:border-gray-800 shadow-lg flex shrink-0"
+                  />
+                  <div className="text-center sm:text-left">
+                    <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                      {post.author.username}
+                    </h4>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                      Author &amp; Content Creator
+                    </p>
+                    <p className="text-gray-700 dark:text-gray-300">
+                      Passionate about sharing knowledge and experiences through writing.
+                      Follow for more insightful content.
+                    </p>
+                  </div>
+                </div>
               </div>
-            </article>
 
-            {/* Category Badge */}
-            <div className="mb-12">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-                Category
-              </h3>
-              <Badge variant="secondary" className="px-4 py-2 text-base">
-                {post.categoryTitle}
-              </Badge>
-            </div>
-
-            {/* Author Card */}
-            <div className="bg-linear-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 mb-12 border border-gray-200 dark:border-gray-700">
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                <Image
-                  src="/avatar.png"
-                  alt={post.author}
-                  width={100}
-                  height={100}
-                  className="rounded-full object-cover border-4 border-white dark:border-gray-800 shadow-lg flex shrink-0"
-                />
-                <div className="text-center sm:text-left">
-                  <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                    {post.author}
-                  </h4>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    Author & Content Creator
-                  </p>
-                  <p className="text-gray-700 dark:text-gray-300">
-                    Passionate about sharing knowledge and experiences through writing.
-                    Follow for more insightful content.
-                  </p>
+              {/* Comments Section */}
+              <div id="comments" className="mt-12">
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    Comments
+                  </h2>
+                  <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => document.getElementById('comment-input')?.focus()}
+                  >
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Add Comment
+                  </Button>
+                </div>
+                {/* TODO: Add CommentSection component */}
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  Comments section coming soon...
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Comments Section */}
-            <div id="comments" className="mt-12">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Comments
-                </h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => document.getElementById('comment-input')?.focus()}
-                >
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  Add Comment
-                </Button>
+          {/* Back to Blog Button */}
+          <div className="mt-12 text-center">
+            <Button
+                variant="outline"
+                onClick={() => router.push('/blog')}
+                className="px-8 py-6 text-lg rounded-xl group hover:shadow-lg transition-shadow">
+              <ArrowLeft className="mr-3 h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+              Back to Blog
+            </Button>
+          </div>
+
+          {/* Post Stats */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 text-center border border-gray-200 dark:border-gray-700">
+              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                {likes}
               </div>
-              {/* TODO: Add CommentSection component */}
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                Comments section coming soon...
+              <div className="text-gray-600 dark:text-gray-400">Likes</div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 text-center border border-gray-200 dark:border-gray-700">
+              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                {readTime}
               </div>
+              <div className="text-gray-600 dark:text-gray-400">Min Read</div>
             </div>
-          </div>
-        </div>
-
-        {/* Back to Blog Button */}
-        <div className="mt-12 text-center">
-          <Button
-            variant="outline"
-            onClick={() => router.push('/blog')}
-            className="px-8 py-6 text-lg rounded-xl group hover:shadow-lg transition-shadow">
-            <ArrowLeft className="mr-3 h-5 w-5 group-hover:-translate-x-1 transition-transform" />
-            Back to Blog
-          </Button>
-        </div>
-
-        {/* Post Stats */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 text-center border border-gray-200 dark:border-gray-700">
-            <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              {likes}
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 text-center border border-gray-200 dark:border-gray-700">
+              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                {wordCount}
+              </div>
+              <div className="text-gray-600 dark:text-gray-400">Words</div>
             </div>
-            <div className="text-gray-600 dark:text-gray-400">Likes</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 text-center border border-gray-200 dark:border-gray-700">
-            <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              {readTime}
-            </div>
-            <div className="text-gray-600 dark:text-gray-400">Min Read</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 text-center border border-gray-200 dark:border-gray-700">
-            <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              {wordCount}
-            </div>
-            <div className="text-gray-600 dark:text-gray-400">Words</div>
           </div>
         </div>
       </div>
-    </div>
   );
 }
